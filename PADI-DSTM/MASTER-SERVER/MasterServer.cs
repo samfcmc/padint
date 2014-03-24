@@ -5,8 +5,9 @@ using System.Text;
 
 namespace MASTER_SERVER
 {
-    class Program
+    class MasterServer
     {
+
         static void Main(string[] args)
         {
         }
