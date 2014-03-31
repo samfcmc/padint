@@ -94,18 +94,20 @@ namespace PADI_DSTM
 
         private List<string> getServersToStore() 
         {
-            int rnd = new Random().Next(0, dataServers.Count);
-            int secondServer = (rnd + 1) % dataServers.Count;
-            Console.WriteLine("Server to store padInt index: " + rnd);
-            string firstServerUrl = dataServers.Keys.ElementAt<string>(rnd);
-            string secondServerUrl = dataServers.Keys.ElementAt<string>(secondServer);
-
+            int count = dataServers.Count;
             List<string> urls = new List<string>();
-            urls.Add(firstServerUrl);
 
-            if (!firstServerUrl.Equals(secondServerUrl))
+            int firstServer = new Random().Next(0, count);
+            string firstServerUrl = dataServers.Keys.ElementAt<string>(firstServer);
+            urls.Add(firstServerUrl);
+            Console.WriteLine("First Server to store padInt index: " + firstServer);
+
+            if (count > 1)
             {
+                int secondServer = (firstServer + 1) % count;
+                string secondServerUrl = dataServers.Keys.ElementAt<string>(secondServer);
                 urls.Add(secondServerUrl);
+                Console.WriteLine("Second Server to store padInt index: " + secondServer);
             }
 
             return urls;
