@@ -28,6 +28,7 @@ namespace PADI_DSTM
     public class RemoteMasterServer : MarshalByRefObject, IMasterServer
     {
         private Dictionary<string, IDataServer> dataServers = new Dictionary<string, IDataServer>();
+        private List<PadIntMetadata> metadata = new List<PadIntMetadata>();
 
         private Dictionary<uint, Transaction> transactions = new Dictionary<uint, Transaction>();
         private uint txIdCount = 0;
@@ -85,6 +86,7 @@ namespace PADI_DSTM
                 PadIntMetadata pmeta = new PadIntMetadata();
                 pmeta.uid = uid;
                 pmeta.servers = servers;
+                metadata.Add(pmeta);
                 return pmeta;
             }
             return null;
@@ -111,6 +113,13 @@ namespace PADI_DSTM
 
         public PadIntMetadata AccessPadInt(int uid)
         {
+            foreach (PadIntMetadata pmeta in metadata)
+            {
+                if (pmeta.uid == uid)
+                {
+                    return pmeta;
+                }
+            }
             return null;
         }
 
