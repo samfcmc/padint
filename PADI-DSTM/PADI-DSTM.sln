@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonTypes", "CommonTypes\CommonTypes.csproj", "{4e2139c7-258f-4732-9b47-b03b8bc737e2}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PADI-DSTM", "PADI-DSTM\PADI-DSTM.csproj", "{91F1850F-72A3-4F43-91D9-A5D97487F47C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PADI-CLIENT", "PADI-CLIENT\PADI-CLIENT.csproj", "{190E5F3A-ADD6-427F-8027-B593B91D45E2}"
