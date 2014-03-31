@@ -94,6 +94,10 @@ namespace PADI_DSTM
 
         public PadInt CreatePadInt(int uid)
         {
+            if (padInts.ContainsKey(uid))
+            {
+                return null;
+            }
             PadInt p = new PadInt(uid);
             padInts.Add(uid, p);
             return p;
@@ -101,7 +105,7 @@ namespace PADI_DSTM
 
         public PadInt AccessPadInt(int uid)
         {
-            return null;
+            return padInts[uid];
         }
 
     }
