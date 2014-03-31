@@ -5,10 +5,12 @@ using System.Text;
 
 namespace PADI_DSTM
 {
-    class Program
+    class Client
     {
         static void Main(string[] args)
         {
+            Console.WriteLine("I'm now running...");
+            Console.ReadLine();
         }
     }
 }

@@ -3,14 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace PADI_DSTM {
-    class MasterServer {
+namespace PADI_DSTM
+{
 
-        static void Main(string[] args) {
+    class MasterServer
+    {
+        static void Main(string[] args)
+        {
         }
     }
 
-    class RemoteMasterServer : MarshalByRefObject, PadiLib {
+    class RemoteMasterServer : MarshalByRefObject, PadiLib
+    {
         private int currentTransaction = 0;
 
         public bool Init()
@@ -55,7 +59,8 @@ namespace PADI_DSTM {
             return false;
         }
 
-        public PadInt CreatePadInt(int uid) {
+        public PadInt CreatePadInt(int uid)
+        {
             return new PadInt();
         }
 
