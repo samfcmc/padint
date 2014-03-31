@@ -25,9 +25,12 @@ namespace PADI_DSTM
         }
     }
 
-    public class RemoteMasterServer : MarshalByRefObject, PadiLib
+    public class RemoteMasterServer : MarshalByRefObject, IMasterServer
     {
-        private int currentTransaction = 0;
+        private Dictionary<string, IServer> dataServers = new Dictionary<string, IServer>();
+
+        private Dictionary<uint, Transaction> transactions = new Dictionary<uint, Transaction>();
+        private uint txIdCount = 0;
 
         public bool Init()
         {
@@ -36,6 +39,8 @@ namespace PADI_DSTM
 
         public bool TxBegin()
         {
+            txIdCount++;
+            transactions.Add(txIdCount, new Transaction(txIdCount));
             return false;
         }
 
@@ -79,6 +84,21 @@ namespace PADI_DSTM
         public PadInt AccessPadInt(int uid)
         {
             return null;
+        }
+
+        public bool RegisterDataServer(string url)
+        {
+            if (dataServers.ContainsKey(url))
+            {
+                return false;
+            }
+
+            IServer remoteServer = (IServer)Activator.GetObject(
+                typeof(IServer),
+                url);
+            dataServers.Add(url, remoteServer);
+            Console.WriteLine("Server with url " + url + " is now part of the deep web.");
+            return true;
         }
     }
 }
