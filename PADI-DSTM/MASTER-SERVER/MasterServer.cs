@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Runtime.Remoting;
+using System.Runtime.Remoting.Channels;
+using System.Runtime.Remoting.Channels.Tcp;
 
 namespace PADI_DSTM
 {
@@ -10,10 +13,19 @@ namespace PADI_DSTM
     {
         static void Main(string[] args)
         {
+            TcpChannel channel = new TcpChannel(8086);
+            ChannelServices.RegisterChannel(channel, false);
+            RemotingConfiguration.RegisterWellKnownServiceType(
+                typeof(RemoteMasterServer),
+                "RemoteMasterServer",
+                WellKnownObjectMode.Singleton);
+
+            Console.WriteLine("<enter> to continue");
+            Console.ReadLine();
         }
     }
 
-    class RemoteMasterServer : MarshalByRefObject, PadiLib
+    public class RemoteMasterServer : MarshalByRefObject, PadiLib
     {
         private int currentTransaction = 0;
 
