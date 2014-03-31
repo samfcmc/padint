@@ -78,8 +78,16 @@ namespace PADI_DSTM
 
         public PadInt AccessPadInt(int uid) 
         {
-            //TODO: fix access
-            return new PadInt(uid);
+            PadIntMetadata metadata = masterServer.AccessPadInt(uid);
+
+            foreach (string s in metadata.servers)
+            {
+                IDataServer server = (IDataServer)Activator.GetObject(
+                    typeof(IDataServer),
+                    s);
+                return server.AccessPadInt(uid);
+            }
+            return null;
         }
     }
 
