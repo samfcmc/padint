@@ -9,7 +9,9 @@ namespace PADI_DSTM
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("I'm now running...");
+            RemoteMasterServer s = (RemoteMasterServer)Activator.GetObject(typeof(RemoteMasterServer), "tcp://localhost:8086/RemoteMasterServer");
+
+            s.Status();
             Console.ReadLine();
         }
     }
