@@ -88,11 +88,6 @@ namespace PADI_DSTM
 
         public bool RegisterDataServer(string url)
         {
-            if (dataServers.ContainsKey(url))
-            {
-                return false;
-            }
-
             IServer remoteServer = (IServer)Activator.GetObject(
                 typeof(IServer),
                 url);

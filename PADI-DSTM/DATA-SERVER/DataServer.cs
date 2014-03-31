@@ -23,14 +23,23 @@ namespace PADI_DSTM
                 "RemoteDataServer",
                 WellKnownObjectMode.Singleton);
 
-            Console.WriteLine("Where is mah mastah?");
-            string machine_port = Console.ReadLine();
+            Console.WriteLine("What is the master port?");
+            string master_port = Console.ReadLine();
+            
+            Console.WriteLine("What is the master hostname?");
+            string master_hostname = Console.ReadLine();
 
             IMasterServer master = (IMasterServer)Activator.GetObject(
                 typeof(IMasterServer),
-                "tcp://" + machine_port + "/RemoteMasterServer");
+                "tcp://" + master_hostname + ":" + master_port + "/RemoteMasterServer");
 
             master.RegisterDataServer("tcp://" + Dns.GetHostName() + ":" + port + "/RemoteDataServer");
+            if (master.Status())
+            {
+                Console.WriteLine("Master is up!");
+            }
+            else Console.WriteLine("You are weird!");
+            
 
             Console.WriteLine("<enter> to continue");
             Console.ReadLine();
