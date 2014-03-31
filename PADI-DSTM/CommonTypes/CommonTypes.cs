@@ -64,7 +64,13 @@ namespace PADI_DSTM
 
     public class PadInt
     {
+        private int uid;
         private int value;
+
+        public PadInt(int uid)
+        {
+            this.uid = uid;
+        }
 
         public int Read()
         {

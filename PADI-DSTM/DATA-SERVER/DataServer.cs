@@ -48,6 +48,8 @@ namespace PADI_DSTM
 
     public class RemoteDataServer : MarshalByRefObject, IServer
     {
+        Dictionary<int, PadInt> padInts = new Dictionary<int, PadInt>();
+
         public bool Init()
         {
             return true;
@@ -92,7 +94,9 @@ namespace PADI_DSTM
 
         public PadInt CreatePadInt(int uid)
         {
-            return new PadInt();
+            PadInt p = new PadInt(uid);
+            padInts.Add(uid, p);
+            return p;
         }
 
         public PadInt AccessPadInt(int uid)
