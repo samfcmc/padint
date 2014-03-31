@@ -27,7 +27,7 @@ namespace PADI_DSTM
 
     public class RemoteMasterServer : MarshalByRefObject, IMasterServer
     {
-        private Dictionary<string, IServer> dataServers = new Dictionary<string, IServer>();
+        private Dictionary<string, IDataServer> dataServers = new Dictionary<string, IDataServer>();
 
         private Dictionary<uint, Transaction> transactions = new Dictionary<uint, Transaction>();
         private uint txIdCount = 0;
@@ -76,12 +76,37 @@ namespace PADI_DSTM
             return false;
         }
 
-        public PadInt CreatePadInt(int uid)
+        public PadIntMetadata CreatePadInt(int uid)
         {
-            return new PadInt();
+            if (dataServers.Count > 0)
+            {
+                List<string> servers = getServersToStore();
+                Console.WriteLine(servers);
+                return new PadIntMetadata(uid, servers);
+            }
+            return null;
         }
 
-        public PadInt AccessPadInt(int uid)
+        private List<string> getServersToStore() 
+        {
+            int rnd = new Random().Next(0, dataServers.Count);
+            int secondServer = (rnd + 1) % dataServers.Count;
+            Console.WriteLine("Server to store padInt index: " + rnd);
+            string firstServerUrl = dataServers.Keys.ElementAt<string>(rnd);
+            string secondServerUrl = dataServers.Keys.ElementAt<string>(secondServer);
+
+            List<string> urls = new List<string>();
+            urls.Add(firstServerUrl);
+
+            if (!firstServerUrl.Equals(secondServerUrl))
+            {
+                urls.Add(secondServerUrl);
+            }
+
+            return urls;
+        }
+
+        public PadIntMetadata AccessPadInt(int uid)
         {
             return null;
         }
@@ -93,8 +118,8 @@ namespace PADI_DSTM
                 return false;
             }
 
-            IServer remoteServer = (IServer)Activator.GetObject(
-                typeof(IServer),
+            IDataServer remoteServer = (IDataServer)Activator.GetObject(
+                typeof(IDataServer),
                 url);
             dataServers.Add(url, remoteServer);
             Console.WriteLine("Server with url " + url + " is now part of the deep web.");

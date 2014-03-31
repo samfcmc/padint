@@ -15,14 +15,19 @@ namespace PADI_DSTM
         bool Fail(string url);
         bool Freeze(string url);
         bool Recover(string url);
-
-        PadInt CreatePadInt(int uid);
-        PadInt AccessPadInt(int uid);
     }
 
     public interface IMasterServer : IServer
     {
         bool RegisterDataServer(string url);
+        PadIntMetadata CreatePadInt(int uid);
+        PadIntMetadata AccessPadInt(int uid);
+    }
+
+    public interface IDataServer : IServer
+    {
+        PadInt CreatePadInt(int uid);
+        PadInt AccessPadInt(int uid);
     }
 
     public class Transaction
@@ -47,8 +52,14 @@ namespace PADI_DSTM
 
     public class PadIntMetadata
     {
-        Dictionary<int, List<Server>> PadIntLocations;
+        public int uid;
+        public List<string> servers;
 
+        public PadIntMetadata(int uid, List<string> servers)
+        {
+            this.uid = uid;
+            this.servers = servers;
+        }
     }
 
     public class PadInt
