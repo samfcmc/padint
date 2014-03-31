@@ -5,6 +5,16 @@ using System.Text;
 
 namespace PADI_DSTM
 {
+    public class Transaction
+    {
+        private uint id;
+
+        public uint getID()
+        {
+            return id;
+        }
+    }
+
     public class Server
     {
         public string url;
