@@ -64,15 +64,16 @@ namespace PADI_DSTM
         public PadInt CreatePadInt(int uid)
         {
             PadIntMetadata metadata = masterServer.CreatePadInt(uid);
-            
+
+            PadInt p = null;
             foreach (string s in metadata.servers)
             {
                 IDataServer server = (IDataServer)Activator.GetObject(
                     typeof(IDataServer),
                     s);
-                server.CreatePadInt(uid);
+                p = server.CreatePadInt(uid);
             }
-            return new PadInt(uid);
+            return p;
         }
 
         public PadInt AccessPadInt(int uid) 
@@ -93,8 +94,11 @@ namespace PADI_DSTM
             dstm.Init();
 
             PadInt p = dstm.CreatePadInt(0);
-            p.Write(30);
-            
+            if (p != null)
+            {
+                p.Write(30);
+            }
+        
             Console.WriteLine(p.Read());
 
             Console.ReadLine();
