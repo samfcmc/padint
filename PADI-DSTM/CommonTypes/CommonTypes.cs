@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Runtime.Serialization;
 
 namespace PADI_DSTM
 {
@@ -45,23 +46,19 @@ namespace PADI_DSTM
         }
     }
 
-    public class Server
-    {
-        public string url;
-    }
-
+    [Serializable]
     public class PadIntMetadata
     {
         public int uid;
         public List<string> servers;
 
-        public PadIntMetadata(int uid, List<string> servers)
+        public PadIntMetadata()
         {
-            this.uid = uid;
-            this.servers = servers;
+
         }
     }
 
+    [Serializable]
     public class PadInt
     {
         private int uid;

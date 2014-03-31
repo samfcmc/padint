@@ -46,7 +46,7 @@ namespace PADI_DSTM
         }
     }
 
-    public class RemoteDataServer : MarshalByRefObject, IServer
+    public class RemoteDataServer : MarshalByRefObject, IDataServer
     {
         Dictionary<int, PadInt> padInts = new Dictionary<int, PadInt>();
 

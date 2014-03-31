@@ -82,7 +82,10 @@ namespace PADI_DSTM
             {
                 List<string> servers = getServersToStore();
                 Console.WriteLine(servers);
-                return new PadIntMetadata(uid, servers);
+                PadIntMetadata pmeta = new PadIntMetadata();
+                pmeta.uid = uid;
+                pmeta.servers = servers;
+                return pmeta;
             }
             return null;
         }
