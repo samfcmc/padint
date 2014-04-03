@@ -8,7 +8,6 @@ namespace PADI_DSTM
 {
     public interface IServer
     {
-        bool Init();
         bool TxBegin();
         bool TxCommit();
         bool TxAbort();
@@ -20,6 +19,7 @@ namespace PADI_DSTM
 
     public interface IMasterServer : IServer
     {
+        Dictionary<string, IDataServer> getDataServers();
         bool RegisterDataServer(string url);
         PadIntMetadata CreatePadInt(int uid);
         PadIntMetadata AccessPadInt(int uid);

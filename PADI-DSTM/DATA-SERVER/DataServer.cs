@@ -33,15 +33,13 @@ namespace PADI_DSTM
                 typeof(IMasterServer),
                 "tcp://" + master_hostname + ":" + master_port + "/RemoteMasterServer");
 
-            master.RegisterDataServer("tcp://" + Dns.GetHostName() + ":" + port + "/RemoteDataServer");
-            if (master.Status())
-            {
-                Console.WriteLine("Master is up!");
-            }
-            else Console.WriteLine("You are weird!");
+            bool reg = master.RegisterDataServer("tcp://" + Dns.GetHostName() + ":" + port + "/RemoteDataServer");
             
-
-            Console.WriteLine("<enter> to continue");
+            if(reg)
+            {
+                Console.WriteLine("Connected to MasterServer");
+            }
+            
             Console.ReadLine();
         }
     }
@@ -49,11 +47,6 @@ namespace PADI_DSTM
     public class RemoteDataServer : MarshalByRefObject, IDataServer
     {
         Dictionary<int, PadInt> padInts = new Dictionary<int, PadInt>();
-
-        public bool Init()
-        {
-            return true;
-        }
 
         public bool TxBegin()
         {
@@ -74,6 +67,7 @@ namespace PADI_DSTM
         {
             Console.WriteLine("Printing Status");
             Console.WriteLine("---------------");
+            Console.WriteLine("Up and Running!");
             return true;
         }
 
@@ -100,6 +94,7 @@ namespace PADI_DSTM
             }
             PadInt p = new PadInt(uid);
             padInts.Add(uid, p);
+            Console.WriteLine("Created PadInt with uid: " + uid);
             return p;
         }
 

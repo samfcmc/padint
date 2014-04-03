@@ -20,7 +20,7 @@ namespace PADI_DSTM
                 "RemoteMasterServer",
                 WellKnownObjectMode.Singleton);
 
-            Console.WriteLine("<enter> to continue");
+            Console.WriteLine("MasterServer Running...");
             Console.ReadLine();
         }
     }
@@ -28,14 +28,14 @@ namespace PADI_DSTM
     public class RemoteMasterServer : MarshalByRefObject, IMasterServer
     {
         private Dictionary<string, IDataServer> dataServers = new Dictionary<string, IDataServer>();
-        private List<PadIntMetadata> metadata = new List<PadIntMetadata>();
+        private Dictionary<int, PadIntMetadata> metadata = new Dictionary<int, PadIntMetadata>();
 
         private Dictionary<uint, Transaction> transactions = new Dictionary<uint, Transaction>();
         private uint txIdCount = 0;
 
-        public bool Init()
+        public Dictionary<string, IDataServer> getDataServers()
         {
-            return true;
+            return dataServers;
         }
 
         public bool TxBegin()
@@ -59,6 +59,7 @@ namespace PADI_DSTM
         {
             Console.WriteLine("Printing Status");
             Console.WriteLine("---------------");
+            Console.WriteLine("Up and Running!");
             return true;
         }
 
@@ -81,12 +82,15 @@ namespace PADI_DSTM
         {
             if (dataServers.Count > 0)
             {
+                if (metadata.ContainsKey(uid))
+                {
+                    return null;
+                }
                 List<string> servers = getServersToStore();
-                Console.WriteLine(servers);
                 PadIntMetadata pmeta = new PadIntMetadata();
                 pmeta.uid = uid;
                 pmeta.servers = servers;
-                metadata.Add(pmeta);
+                metadata.Add(uid, pmeta);
                 return pmeta;
             }
             return null;
@@ -100,14 +104,14 @@ namespace PADI_DSTM
             int firstServer = new Random().Next(0, count);
             string firstServerUrl = dataServers.Keys.ElementAt<string>(firstServer);
             urls.Add(firstServerUrl);
-            Console.WriteLine("First Server to store padInt index: " + firstServer);
+            Console.WriteLine("First Server to store padInt: " + firstServerUrl);
 
             if (count > 1)
             {
                 int secondServer = (firstServer + 1) % count;
                 string secondServerUrl = dataServers.Keys.ElementAt<string>(secondServer);
                 urls.Add(secondServerUrl);
-                Console.WriteLine("Second Server to store padInt index: " + secondServer);
+                Console.WriteLine("Second Server to store padInt: " + secondServerUrl);
             }
 
             return urls;
@@ -115,14 +119,7 @@ namespace PADI_DSTM
 
         public PadIntMetadata AccessPadInt(int uid)
         {
-            foreach (PadIntMetadata pmeta in metadata)
-            {
-                if (pmeta.uid == uid)
-                {
-                    return pmeta;
-                }
-            }
-            return null;
+            return metadata[uid];
         }
 
         public bool RegisterDataServer(string url)
@@ -136,7 +133,7 @@ namespace PADI_DSTM
                 typeof(IDataServer),
                 url);
             dataServers.Add(url, remoteServer);
-            Console.WriteLine("Server with url " + url + " is now part of the deep web.");
+            Console.WriteLine("Server with url " + url + " is now connected.");
             return true;
         }
     }

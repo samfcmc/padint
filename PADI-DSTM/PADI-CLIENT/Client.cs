@@ -8,20 +8,22 @@ namespace PADI_DSTM
     public class PadiDstm : PadiLib
     {
         IMasterServer masterServer;
+        string masterPort;
+        string masterHostname;
 
         public bool Init()
         {
             Console.WriteLine("What is the master port?");
-            string master_port = Console.ReadLine();
+            masterPort = Console.ReadLine();
 
             Console.WriteLine("What is the master hostname?");
-            string master_hostname = Console.ReadLine();
+            masterHostname = Console.ReadLine();
 
             masterServer = (IMasterServer)Activator.GetObject(
                 typeof(IMasterServer),
-                "tcp://" + master_hostname + ":" + master_port + "/RemoteMasterServer");
+                "tcp://" + masterHostname + ":" + masterPort + "/RemoteMasterServer");
 
-            return masterServer.Status();
+            return true;
         }
 
         public bool TxBegin()
@@ -43,6 +45,18 @@ namespace PADI_DSTM
         {
             Console.WriteLine("Printing Status");
             Console.WriteLine("---------------");
+            if (masterServer.Status())
+            {
+                Console.WriteLine("MasterServer is alive.");
+            }
+
+            foreach (KeyValuePair<string, IDataServer> server in masterServer.getDataServers())
+            {
+                if (server.Value.Status())
+                {
+                    Console.WriteLine("DataServer " + server.Key);
+                }
+            }
             return true;
         }
 
@@ -64,6 +78,10 @@ namespace PADI_DSTM
         public PadInt CreatePadInt(int uid)
         {
             PadIntMetadata metadata = masterServer.CreatePadInt(uid);
+            if (metadata == null)
+            {
+                return null;
+            }
 
             PadInt p = null;
             foreach (string s in metadata.servers)
@@ -101,14 +119,20 @@ namespace PADI_DSTM
 
             dstm.Init();
 
-            PadInt p = dstm.CreatePadInt(0);
-            if (p != null)
+            PadInt p1 = dstm.CreatePadInt(0);
+            PadInt p2 = dstm.CreatePadInt(1);
+            if (p1 != null)
             {
-                p.Write(30);
+                p1.Write(30);
+                Console.WriteLine(p1.Read());
             }
-        
-            Console.WriteLine(p.Read());
+            if (p2 != null)
+            {
+                p2.Write(20);
+                Console.WriteLine(p2.Read());
+            }
 
+            Console.WriteLine("Finished!");
             Console.ReadLine();
         }
     }
