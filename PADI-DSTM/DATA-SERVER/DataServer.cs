@@ -49,22 +49,44 @@ namespace PADI_DSTM
     public class RemoteDataServer : MarshalByRefObject, IDataServer
     {
         Dictionary<int, PadInt> padInts = new Dictionary<int, PadInt>();
+        List<long> joinedTx = new List<long>();
         public static string myUrl;
         public static IMasterServer master;
 
-        public bool TxBegin(int uid, long timestamp)
+        public void Write(int uid, long timestamp, int newvalue)
         {
-            if (padInts[uid].currentTimestamp == -1)
+            if (!joinedTx.Contains(timestamp))
             {
-                padInts[uid].currentTimestamp = timestamp;
                 master.TxJoin(myUrl, timestamp);
-                return true;
+                joinedTx.Add(timestamp);
             }
-            else if (padInts[uid].currentTimestamp < timestamp)
+            if (timestamp < padInts[uid].readTimestamp)
             {
-                //wait
+                throw new Exception("TransactionAbortedException");
             }
-            return false;
+            else if (timestamp > padInts[uid].writeTimestamp)
+            {
+                padInts[uid].writeTimestamp = timestamp;
+                padInts[uid].value = newvalue;
+            }
+        }
+
+        public int Read(int uid, long timestamp)
+        {
+            if (!joinedTx.Contains(timestamp))
+            {
+                master.TxJoin(myUrl, timestamp);
+                joinedTx.Add(timestamp);
+            }
+            if (padInts[uid].writeTimestamp > timestamp)
+            {
+                throw new Exception("TransactionAbortedException");
+            }
+            else if (padInts[uid].readTimestamp < timestamp)
+            {
+                padInts[uid].readTimestamp = timestamp;
+            }
+            return padInts[uid].value;
         }
 
         public bool TxPrepare(long timestamp)
@@ -102,7 +124,7 @@ namespace PADI_DSTM
         public bool Freeze()
         {
             Monitor.Enter(this);
-            return false;
+            return true;
         }
 
         public bool Recover()
