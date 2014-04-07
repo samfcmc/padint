@@ -10,6 +10,7 @@ namespace PADI_DSTM
         static IMasterServer masterServer;
         static string masterPort;
         static string masterHostname;
+        static long currentTimestamp;
 
         public static bool Init()
         {
@@ -28,7 +29,8 @@ namespace PADI_DSTM
 
         public static bool TxBegin()
         {
-            return false;
+            currentTimestamp = masterServer.TxBegin();
+            return true;
         }
 
         public static bool TxCommit()
@@ -110,7 +112,7 @@ namespace PADI_DSTM
                 IDataServer server = (IDataServer)Activator.GetObject(
                     typeof(IDataServer),
                     s);
-                p = server.CreatePadInt(uid);
+                p = server.CreatePadInt(uid, metadata);
             }
             return p;
         }

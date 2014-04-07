@@ -30,29 +30,75 @@ namespace PADI_DSTM
         private Dictionary<string, IDataServer> dataServers = new Dictionary<string, IDataServer>();
         private Dictionary<int, PadIntMetadata> metadata = new Dictionary<int, PadIntMetadata>();
 
-        //private Dictionary<uint, Transaction> transactions = new Dictionary<uint, Transaction>();
-        private uint txIdCount = 0;
+        private Dictionary<long, PadiTransaction> transactions = new Dictionary<long, PadiTransaction>();
+        private long currentTimestamp = 0;
 
         public Dictionary<string, IDataServer> getDataServers()
         {
             return dataServers;
         }
 
-        public bool TxBegin()
+        public long TxBegin()
         {
-            /*txIdCount++;
-            transactions.Add(txIdCount, new Transaction(txIdCount));*/
-            return false;
+            transactions.Add(currentTimestamp, new PadiTransaction(currentTimestamp));
+            return currentTimestamp++;
+        }
+        
+        public bool TxJoin(string url, long timestamp)
+        {
+            if (transactions[timestamp].servers.Contains(url))
+            {
+                return false;
+            }
+            else transactions[timestamp].servers.Add(url);
+            return true;
         }
 
-        public bool TxCommit()
+        public bool TxCommit(long timestamp)
         {
-            return false;
+            List<IDataServer> servers = new List<IDataServer>();
+            bool failed = false;
+
+            foreach (string s in transactions[timestamp].servers)
+            {
+                IDataServer server = (IDataServer)Activator.GetObject(
+                    typeof(IDataServer),
+                    s);
+                servers.Add(server);
+                if(!server.TxPrepare(timestamp)) 
+                {
+                    failed = true;
+                }
+            }
+            if(failed) 
+            {
+                foreach(IDataServer server in servers) 
+                {
+                    server.TxAbort(timestamp);
+                }
+                transactions.Remove(timestamp);
+                return false;
+            }
+
+            foreach (IDataServer server in servers)
+            {
+                server.TxCommit(timestamp);
+            }
+            transactions.Remove(timestamp);
+            return true;
         }
 
-        public bool TxAbort()
+        public bool TxAbort(long timestamp)
         {
-            return false;
+            foreach (string s in transactions[timestamp].servers)
+            {
+                IDataServer server = (IDataServer)Activator.GetObject(
+                    typeof(IDataServer),
+                    s);
+                server.TxAbort(timestamp);
+            }
+            transactions.Remove(timestamp);
+            return true;
         }
 
         public bool Status()

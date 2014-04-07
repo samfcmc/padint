@@ -8,9 +8,8 @@ namespace PADI_DSTM
 {
     public interface IServer
     {
-        bool TxBegin();
-        bool TxCommit();
-        bool TxAbort();
+        bool TxCommit(long timestamp);
+        bool TxAbort(long timestamp);
         bool Status();
         void Fail();
         bool Freeze();
@@ -20,6 +19,8 @@ namespace PADI_DSTM
     public interface IMasterServer : IServer
     {
         Dictionary<string, IDataServer> getDataServers();
+        long TxBegin();
+        bool TxJoin(string url, long timestamp);
         bool RegisterDataServer(string url);
         PadIntMetadata CreatePadInt(int uid);
         PadIntMetadata AccessPadInt(int uid);
@@ -27,7 +28,9 @@ namespace PADI_DSTM
 
     public interface IDataServer : IServer
     {
-        PadInt CreatePadInt(int uid);
+        bool TxBegin(int uid, long timestamp);
+        bool TxPrepare(long timestamp);
+        PadInt CreatePadInt(int uid, PadIntMetadata metadata);
         PadInt AccessPadInt(int uid);
     }
 
@@ -43,19 +46,43 @@ namespace PADI_DSTM
         }
     }
 
+    public class PadiTransaction
+    {
+        public long timestamp;
+        public List<string> servers;
+
+        public PadiTransaction(long timestamp)
+        {
+            this.timestamp = timestamp;
+            servers = new List<string>();
+        }
+    }
+
     [Serializable]
     public class PadInt
     {
         private int uid;
+        public long currentTimestamp;
         private int value;
+        public List<string> servers;
 
         public PadInt(int uid)
         {
             this.uid = uid;
+            this.currentTimestamp = -1;
+            servers = new List<string>();
         }
 
         public int Read()
         {
+            foreach(string s in servers) 
+            {
+                IDataServer server = (IDataServer)Activator.GetObject(
+                    typeof(IDataServer),
+                    s);
+                //server.TxBegin();
+            }
+
             return value;
         }
 
