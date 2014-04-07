@@ -107,17 +107,17 @@ namespace PADI_DSTM
     public class PadiDstm
     {
         public static IMasterServer masterServer;
-        public static string masterPort;
-        public static string masterHostname;
+        public static string masterPort = "8086";
+        public static string masterHostname = "localhost";
         public static long currentTimestamp;
 
         public static bool Init()
         {
-            Console.WriteLine("What is the master port?");
+            /*Console.WriteLine("What is the master port?");
             masterPort = Console.ReadLine();
 
             Console.WriteLine("What is the master hostname?");
-            masterHostname = Console.ReadLine();
+            masterHostname = Console.ReadLine();*/
 
             masterServer = (IMasterServer)Activator.GetObject(
                 typeof(IMasterServer),
