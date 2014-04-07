@@ -14,9 +14,29 @@ namespace PADI_DSTM
     {
         Dictionary<long, Dictionary<int, int>> oldValues = new Dictionary<long, Dictionary<int, int>>();
 
-        public void store()
+        public void AddLogEntry(long timestamp)
         {
-            //oldValues.Add(
+            oldValues.Add(timestamp, new Dictionary<int,int>());
+        }
+
+        public void RemoveLogEntry(long timestamp)
+        {
+            oldValues.Remove(timestamp);
+        }
+
+        public void StorePadInt(long timestamp, int uid, int val)
+        {
+            oldValues[timestamp].Add(uid, val);
+        }
+
+        public int RestorePadInt(long timestamp, int uid)
+        {
+            return oldValues[timestamp][uid];
+        }
+
+        public Dictionary<int, int> GetTimestampUIDs(long timestamp)
+        {
+            return oldValues[timestamp];
         }
     }
 
@@ -59,6 +79,7 @@ namespace PADI_DSTM
     public class RemoteDataServer : MarshalByRefObject, IDataServer
     {
         Dictionary<int, PadInt> padInts = new Dictionary<int, PadInt>();
+        Log log = new Log();
         List<long> joinedTx = new List<long>();
         public static string myUrl;
         public static IMasterServer master;
@@ -69,9 +90,12 @@ namespace PADI_DSTM
             {
                 master.TxJoin(myUrl, timestamp);
                 joinedTx.Add(timestamp);
+                log.AddLogEntry(timestamp);
+                log.StorePadInt(timestamp, uid, padInts[uid].value);
             }
             if (timestamp < padInts[uid].readTimestamp)
             {
+                log.RemoveLogEntry(timestamp);
                 throw new Exception("TransactionAbortedException");
             }
             else if (timestamp > padInts[uid].writeTimestamp)
@@ -111,8 +135,11 @@ namespace PADI_DSTM
 
         public bool TxAbort(long timestamp)
         {
-
-            return false;
+            foreach(int uid in log.GetTimestampUIDs(timestamp).Keys)
+            {
+                padInts[uid].value = log.RestorePadInt(timestamp, uid);
+            }
+            return true;
         }
 
         public bool Status()

@@ -23,14 +23,13 @@ namespace PADI_DSTM
             res = PadiDstm.TxBegin();
             pi_a = PadiDstm.AccessPadInt(0);
             pi_b = PadiDstm.AccessPadInt(1);
-            res = PadiDstm.Freeze("tcp://localhost:1001/RemoteDataServer");
             pi_a.Write(36);
             pi_b.Write(37);
             Console.WriteLine("a = " + pi_a.Read());
             Console.WriteLine("b = " + pi_b.Read());
             PadiDstm.Status();
             // The following 3 lines assume we have 2 servers: one at port 1001 and another at port 1002
-            
+            res = PadiDstm.Freeze("tcp://localhost:1001/RemoteDataServer");
             res = PadiDstm.Recover("tcp://localhost:1001/RemoteDataServer");
             res = PadiDstm.Fail("tcp://localhost:1002/RemoteDataServer");
             res = PadiDstm.TxCommit();
