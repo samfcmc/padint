@@ -95,7 +95,7 @@ namespace PADI_DSTM
             }
             if (timestamp < padInts[uid].readTimestamp)
             {
-                log.RemoveLogEntry(timestamp);
+                TxAbort(timestamp);
                 throw new Exception("TransactionAbortedException");
             }
             else if (timestamp > padInts[uid].writeTimestamp)
@@ -114,6 +114,7 @@ namespace PADI_DSTM
             }
             if (padInts[uid].writeTimestamp > timestamp)
             {
+                TxAbort(timestamp);
                 throw new Exception("TransactionAbortedException");
             }
             else if (padInts[uid].readTimestamp < timestamp)
@@ -139,6 +140,7 @@ namespace PADI_DSTM
             {
                 padInts[uid].value = log.RestorePadInt(timestamp, uid);
             }
+            log.RemoveLogEntry(timestamp);
             return true;
         }
 
