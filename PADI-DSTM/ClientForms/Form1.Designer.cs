@@ -46,6 +46,8 @@
             this.padIntValue = new System.Windows.Forms.TextBox();
             this.buttonRead = new System.Windows.Forms.Button();
             this.buttonWrite = new System.Windows.Forms.Button();
+            this.label1 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // masterHost
@@ -152,9 +154,9 @@
             // 
             // padIntUId
             // 
-            this.padIntUId.Location = new System.Drawing.Point(12, 147);
+            this.padIntUId.Location = new System.Drawing.Point(51, 147);
             this.padIntUId.Name = "padIntUId";
-            this.padIntUId.Size = new System.Drawing.Size(95, 20);
+            this.padIntUId.Size = new System.Drawing.Size(56, 20);
             this.padIntUId.TabIndex = 11;
             this.padIntUId.Text = "0";
             // 
@@ -188,9 +190,9 @@
             // 
             // padIntValue
             // 
-            this.padIntValue.Location = new System.Drawing.Point(12, 172);
+            this.padIntValue.Location = new System.Drawing.Point(51, 172);
             this.padIntValue.Name = "padIntValue";
-            this.padIntValue.Size = new System.Drawing.Size(95, 20);
+            this.padIntValue.Size = new System.Drawing.Size(56, 20);
             this.padIntValue.TabIndex = 17;
             this.padIntValue.Text = "10";
             // 
@@ -214,11 +216,31 @@
             this.buttonWrite.UseVisualStyleBackColor = true;
             this.buttonWrite.Click += new System.EventHandler(this.buttonWrite_Click);
             // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(12, 150);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(21, 13);
+            this.label1.TabIndex = 20;
+            this.label1.Text = "uid";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(12, 175);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(33, 13);
+            this.label2.TabIndex = 21;
+            this.label2.Text = "value";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(284, 293);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.buttonWrite);
             this.Controls.Add(this.buttonRead);
             this.Controls.Add(this.padIntValue);
@@ -264,6 +286,8 @@
         private System.Windows.Forms.TextBox padIntValue;
         private System.Windows.Forms.Button buttonRead;
         private System.Windows.Forms.Button buttonWrite;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label label2;
     }
 }
 

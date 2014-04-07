@@ -131,7 +131,10 @@ namespace ClientForms
             }
             else
             {
-                padInts.Add(uid, padInt);
+                if (!padInts.ContainsKey(uid))
+                {
+                    padInts.Add(uid, padInt);
+                }
                 appendToLog("Accessed PadInt with uid: " + uid + ".");
             }
         }
@@ -139,16 +142,31 @@ namespace ClientForms
         private void buttonRead_Click(object sender, EventArgs e)
         {
             int uid = Convert.ToInt32(padIntUId.Text);
-            int value = padInts[uid].Read();
-            appendToLog("Read value: " + value + " at PadInt with uid: " + uid + ".");
+            try
+            {
+                int value = padInts[uid].Read();
+                appendToLog("Read value: " + value + " at PadInt with uid: " + uid + ".");
+            }
+            catch (Exception ex)
+            {
+                appendToLog(ex.Message);
+            }
         }
 
         private void buttonWrite_Click(object sender, EventArgs e)
         {
             int uid = Convert.ToInt32(padIntUId.Text);
             int value = Convert.ToInt32(padIntValue.Text);
-            padInts[uid].Write(value);
-            appendToLog("Wrote value: " + value + " at PadInt with uid: " + uid + ".");
+            try
+            {
+                padInts[uid].Write(value);
+                appendToLog("Wrote value: " + value + " at PadInt with uid: " + uid + ".");
+                buttonRead_Click(sender, e);
+            }
+            catch (Exception ex)
+            {
+                appendToLog(ex.Message);
+            }
         }
     }
 }

@@ -75,6 +75,10 @@ namespace PADI_DSTM
 
         public int Read()
         {
+            if (PadiDstm.currentTimestamp < 0)
+            {
+                throw new Exception("Error: Cannot read outside a transaction.");
+            }
             foreach (string s in servers)
             {
                 IDataServer server = (IDataServer)Activator.GetObject(
@@ -94,6 +98,10 @@ namespace PADI_DSTM
 
         public void Write(int val)
         {
+            if (PadiDstm.currentTimestamp < 0)
+            {
+                throw new Exception("Error: Cannot write outside a transaction.");
+            }
             foreach (string s in servers)
             {
                 IDataServer server = (IDataServer)Activator.GetObject(
@@ -109,7 +117,7 @@ namespace PADI_DSTM
         public static IMasterServer masterServer;
         public static string masterPort = "8086";
         public static string masterHostname = "localhost";
-        public static long currentTimestamp;
+        public static long currentTimestamp = -1;
 
         public static bool Init()
         {
