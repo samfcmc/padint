@@ -134,7 +134,7 @@ namespace PADI_DSTM
 
         public static bool TxCommit()
         {
-            return false;
+            return masterServer.TxCommit(currentTimestamp);
         }
 
         public static bool TxAbort()

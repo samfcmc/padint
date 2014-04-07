@@ -10,6 +10,16 @@ using System.Threading;
 
 namespace PADI_DSTM
 {
+    public class Log
+    {
+        Dictionary<long, Dictionary<int, int>> oldValues = new Dictionary<long, Dictionary<int, int>>();
+
+        public void store()
+        {
+            //oldValues.Add(
+        }
+    }
+
     class DataServer
     {
         static void Main(string[] args)
@@ -96,11 +106,12 @@ namespace PADI_DSTM
 
         public bool TxCommit(long timestamp)
         {
-            return false;
+            return joinedTx.Remove(timestamp);
         }
 
         public bool TxAbort(long timestamp)
         {
+
             return false;
         }
 
