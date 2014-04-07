@@ -63,17 +63,16 @@ namespace PADI_DSTM
             return true;
         }
 
-        public bool Fail(string url)
+        public void Fail()
+        {
+        }
+
+        public bool Freeze()
         {
             return false;
         }
 
-        public bool Freeze(string url)
-        {
-            return false;
-        }
-
-        public bool Recover(string url)
+        public bool Recover()
         {
             return false;
         }

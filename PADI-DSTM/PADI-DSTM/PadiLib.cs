@@ -62,17 +62,38 @@ namespace PADI_DSTM
 
         public static bool Fail(string url)
         {
-            return false;
+            IDataServer dataServer = (IDataServer)Activator.GetObject(
+                typeof(IDataServer),
+                url);
+
+            try
+            {
+                dataServer.Fail();
+            }
+            catch (Exception e)
+            {
+                //Something went wrong trying to fail the server
+                return false;
+            }
+
+            return true;
         }
 
         public static bool Freeze(string url)
         {
-            return false;
+            IDataServer server = (IDataServer)Activator.GetObject(
+                    typeof(IDataServer),
+                    url);
+
+            return server.Freeze();
         }
 
         public static bool Recover(string url)
         {
-            return false;
+            IDataServer server = (IDataServer)Activator.GetObject(
+                    typeof(IDataServer),
+                    url);
+            return server.Recover();
         }
 
         public static PadInt CreatePadInt(int uid)

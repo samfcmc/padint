@@ -12,9 +12,9 @@ namespace PADI_DSTM
         bool TxCommit();
         bool TxAbort();
         bool Status();
-        bool Fail(string url);
-        bool Freeze(string url);
-        bool Recover(string url);
+        void Fail();
+        bool Freeze();
+        bool Recover();
     }
 
     public interface IMasterServer : IServer

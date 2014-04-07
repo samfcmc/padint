@@ -1,7 +1,9 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonTypes", "CommonTypes\CommonTypes.csproj", "{4e2139c7-258f-4732-9b47-b03b8bc737e2}"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonTypes", "CommonTypes\CommonTypes.csproj", "{4E2139C7-258F-4732-9B47-B03B8BC737E2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PADI-DSTM", "PADI-DSTM\PADI-DSTM.csproj", "{91F1850F-72A3-4F43-91D9-A5D97487F47C}"
 EndProject
@@ -17,6 +19,8 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4E2139C7-258F-4732-9B47-B03B8BC737E2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4E2139C7-258F-4732-9B47-B03B8BC737E2}.Release|x86.ActiveCfg = Release|Any CPU
 		{91F1850F-72A3-4F43-91D9-A5D97487F47C}.Debug|x86.ActiveCfg = Debug|x86
 		{91F1850F-72A3-4F43-91D9-A5D97487F47C}.Debug|x86.Build.0 = Debug|x86
 		{91F1850F-72A3-4F43-91D9-A5D97487F47C}.Release|x86.ActiveCfg = Release|x86

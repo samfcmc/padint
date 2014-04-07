@@ -6,6 +6,7 @@ using System.Net;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
+using System.Threading;
 
 namespace PADI_DSTM
 {
@@ -71,19 +72,25 @@ namespace PADI_DSTM
             return true;
         }
 
-        public bool Fail(string url)
+        public void Fail()
         {
+            foreach (IChannel channel in ChannelServices.RegisteredChannels)
+            {
+                ChannelServices.UnregisterChannel(channel);                    
+            }
+            Environment.Exit(0);
+        }
+
+        public bool Freeze()
+        {
+            Monitor.Enter(this);
             return false;
         }
 
-        public bool Freeze(string url)
+        public bool Recover()
         {
-            return false;
-        }
-
-        public bool Recover(string url)
-        {
-            return false;
+            Monitor.PulseAll(this);
+            return true;
         }
 
         public PadInt CreatePadInt(int uid)
