@@ -30,7 +30,7 @@ namespace PADI_DSTM
         private Dictionary<string, IDataServer> dataServers = new Dictionary<string, IDataServer>();
         private Dictionary<int, PadIntMetadata> metadata = new Dictionary<int, PadIntMetadata>();
 
-        private Dictionary<uint, Transaction> transactions = new Dictionary<uint, Transaction>();
+        //private Dictionary<uint, Transaction> transactions = new Dictionary<uint, Transaction>();
         private uint txIdCount = 0;
 
         public Dictionary<string, IDataServer> getDataServers()
@@ -40,8 +40,8 @@ namespace PADI_DSTM
 
         public bool TxBegin()
         {
-            txIdCount++;
-            transactions.Add(txIdCount, new Transaction(txIdCount));
+            /*txIdCount++;
+            transactions.Add(txIdCount, new Transaction(txIdCount));*/
             return false;
         }
 

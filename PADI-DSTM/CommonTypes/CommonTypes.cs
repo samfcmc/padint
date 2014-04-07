@@ -31,21 +31,6 @@ namespace PADI_DSTM
         PadInt AccessPadInt(int uid);
     }
 
-    public class Transaction
-    {
-        private uint id;
-
-        public Transaction(uint id)
-        {
-            this.id = id;
-        }
-
-        public uint getID()
-        {
-            return id;
-        }
-    }
-
     [Serializable]
     public class PadIntMetadata
     {

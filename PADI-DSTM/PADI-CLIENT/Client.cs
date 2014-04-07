@@ -7,11 +7,11 @@ namespace PADI_DSTM
 {
     public class PadiDstm : PadiLib
     {
-        IMasterServer masterServer;
-        string masterPort;
-        string masterHostname;
+        static IMasterServer masterServer;
+        static string masterPort;
+        static string masterHostname;
 
-        public bool Init()
+        public static bool Init()
         {
             Console.WriteLine("What is the master port?");
             masterPort = Console.ReadLine();
@@ -26,22 +26,22 @@ namespace PADI_DSTM
             return true;
         }
 
-        public bool TxBegin()
+        public static bool TxBegin()
         {
             return false;
         }
 
-        public bool TxCommit()
+        public static bool TxCommit()
         {
             return false;
         }
 
-        public bool TxAbort()
+        public static bool TxAbort()
         {
             return false;
         }
 
-        public bool Status()
+        public static bool Status()
         {
             Console.WriteLine("Printing Status");
             Console.WriteLine("---------------");
@@ -60,22 +60,22 @@ namespace PADI_DSTM
             return true;
         }
 
-        public bool Fail(string url)
+        public static bool Fail(string url)
         {
             return false;
         }
 
-        public bool Freeze(string url)
+        public static bool Freeze(string url)
         {
             return false;
         }
 
-        public bool Recover(string url)
+        public static bool Recover(string url)
         {
             return false;
         }
 
-        public PadInt CreatePadInt(int uid)
+        public static PadInt CreatePadInt(int uid)
         {
             PadIntMetadata metadata = masterServer.CreatePadInt(uid);
             if (metadata == null)
@@ -94,7 +94,7 @@ namespace PADI_DSTM
             return p;
         }
 
-        public PadInt AccessPadInt(int uid) 
+        public static PadInt AccessPadInt(int uid) 
         {
             PadIntMetadata metadata = masterServer.AccessPadInt(uid);
 
@@ -111,29 +111,33 @@ namespace PADI_DSTM
 
     class Client
     {
+
         static void Main(string[] args)
         {
             Console.WriteLine("CLIENT APPLICATION v1.0");
 
-            PadiDstm dstm = new PadiDstm();
+            bool res;
 
-            dstm.Init();
+            PadiDstm.Init();
 
-            PadInt p1 = dstm.CreatePadInt(0);
-            PadInt p2 = dstm.CreatePadInt(1);
-            if (p1 != null)
-            {
-                p1.Write(30);
-                Console.WriteLine(p1.Read());
-            }
-            if (p2 != null)
-            {
-                p2.Write(20);
-                Console.WriteLine(p2.Read());
-            }
+            res = PadiDstm.TxBegin();
+            PadInt pi_a = PadiDstm.CreatePadInt(0);
+            PadInt pi_b = PadiDstm.CreatePadInt(1);
+            res = PadiDstm.TxCommit();
 
-            Console.WriteLine("Finished!");
-            Console.ReadLine();
+            res = PadiDstm.TxBegin();
+            pi_a = PadiDstm.AccessPadInt(0);
+            pi_b = PadiDstm.AccessPadInt(1);
+            pi_a.Write(36);
+            pi_b.Write(37);
+            Console.WriteLine("a = " + pi_a.Read());
+            Console.WriteLine("b = " + pi_b.Read());
+            PadiDstm.Status();
+            // The following 3 lines assume we have 2 servers: one at port 1001 and another at port 1002
+            res = PadiDstm.Freeze("tcp://localhost:1001/Server");
+            res = PadiDstm.Recover("tcp://localhost:1001/Server");
+            res = PadiDstm.Fail("tcp://localhost:1002/Server");
+            res = PadiDstm.TxCommit();
         }
     }
 }
