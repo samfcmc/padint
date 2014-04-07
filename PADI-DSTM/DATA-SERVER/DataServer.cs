@@ -29,11 +29,12 @@ namespace PADI_DSTM
             Console.WriteLine("What is the master hostname?");
             string master_hostname = Console.ReadLine();
 
-            IMasterServer master = (IMasterServer)Activator.GetObject(
+            RemoteDataServer.master = (IMasterServer)Activator.GetObject(
                 typeof(IMasterServer),
                 "tcp://" + master_hostname + ":" + master_port + "/RemoteMasterServer");
 
-            bool reg = master.RegisterDataServer("tcp://" + Dns.GetHostName() + ":" + port + "/RemoteDataServer");
+            RemoteDataServer.myUrl = "tcp://" + Dns.GetHostName() + ":" + port + "/RemoteDataServer";
+            bool reg = RemoteDataServer.master.RegisterDataServer(RemoteDataServer.myUrl);
             
             if(reg)
             {
@@ -47,20 +48,27 @@ namespace PADI_DSTM
     public class RemoteDataServer : MarshalByRefObject, IDataServer
     {
         Dictionary<int, PadInt> padInts = new Dictionary<int, PadInt>();
+        public static string myUrl;
+        public static IMasterServer master;
 
-        public bool TxBegin(long timestamp)
+        public bool TxBegin(int uid, long timestamp)
         {
-            return false;
-        }
-
-        public bool TxJoin(long timestamp)
-        {
+            if (padInts[uid].currentTimestamp == -1)
+            {
+                padInts[uid].currentTimestamp = timestamp;
+                master.TxJoin(myUrl, timestamp);
+                return true;
+            }
+            else if (padInts[uid].currentTimestamp < timestamp)
+            {
+                //wait
+            }
             return false;
         }
 
         public bool TxPrepare(long timestamp)
         {
-            return false;
+            return true;
         }
 
         public bool TxCommit(long timestamp)
@@ -96,13 +104,17 @@ namespace PADI_DSTM
             return false;
         }
 
-        public PadInt CreatePadInt(int uid)
+        public PadInt CreatePadInt(int uid, PadIntMetadata metadata)
         {
             if (padInts.ContainsKey(uid))
             {
                 return null;
             }
             PadInt p = new PadInt(uid);
+            foreach(string s in metadata.servers) 
+            {
+                p.servers.Add(s);
+            }
             padInts.Add(uid, p);
             Console.WriteLine("Created PadInt with uid: " + uid);
             return p;

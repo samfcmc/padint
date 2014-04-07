@@ -19,7 +19,8 @@ namespace PADI_DSTM
     public interface IMasterServer : IServer
     {
         Dictionary<string, IDataServer> getDataServers();
-        bool TxBegin();
+        long TxBegin();
+        bool TxJoin(string url, long timestamp);
         bool RegisterDataServer(string url);
         PadIntMetadata CreatePadInt(int uid);
         PadIntMetadata AccessPadInt(int uid);
@@ -27,10 +28,9 @@ namespace PADI_DSTM
 
     public interface IDataServer : IServer
     {
-        bool TxJoin(long timestamp);
-        bool TxBegin(long timestamp);
+        bool TxBegin(int uid, long timestamp);
         bool TxPrepare(long timestamp);
-        PadInt CreatePadInt(int uid);
+        PadInt CreatePadInt(int uid, PadIntMetadata metadata);
         PadInt AccessPadInt(int uid);
     }
 
@@ -64,14 +64,25 @@ namespace PADI_DSTM
         private int uid;
         public long currentTimestamp;
         private int value;
+        public List<string> servers;
 
         public PadInt(int uid)
         {
             this.uid = uid;
+            this.currentTimestamp = -1;
+            servers = new List<string>();
         }
 
         public int Read()
         {
+            foreach(string s in servers) 
+            {
+                IDataServer server = (IDataServer)Activator.GetObject(
+                    typeof(IDataServer),
+                    s);
+                //server.TxBegin();
+            }
+
             return value;
         }
 

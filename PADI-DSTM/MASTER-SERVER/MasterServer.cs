@@ -38,10 +38,19 @@ namespace PADI_DSTM
             return dataServers;
         }
 
-        public bool TxBegin()
+        public long TxBegin()
         {
             transactions.Add(currentTimestamp, new PadiTransaction(currentTimestamp));
-            currentTimestamp++;
+            return currentTimestamp++;
+        }
+        
+        public bool TxJoin(string url, long timestamp)
+        {
+            if (transactions[timestamp].servers.Contains(url))
+            {
+                return false;
+            }
+            else transactions[timestamp].servers.Add(url);
             return true;
         }
 
