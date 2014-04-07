@@ -48,17 +48,27 @@ namespace PADI_DSTM
     {
         Dictionary<int, PadInt> padInts = new Dictionary<int, PadInt>();
 
-        public bool TxBegin()
+        public bool TxBegin(long timestamp)
         {
             return false;
         }
 
-        public bool TxCommit()
+        public bool TxJoin(long timestamp)
         {
             return false;
         }
 
-        public bool TxAbort()
+        public bool TxPrepare(long timestamp)
+        {
+            return false;
+        }
+
+        public bool TxCommit(long timestamp)
+        {
+            return false;
+        }
+
+        public bool TxAbort(long timestamp)
         {
             return false;
         }
