@@ -63,8 +63,8 @@ namespace PADI_DSTM
     {
         private int uid;
         public int value;
-        public long readTimestamp;
-        public long writeTimestamp;
+        public long readTimestamp = -1;
+        public long writeTimestamp = -1;
         public List<string> servers;
 
         public PadInt(int uid)
@@ -79,6 +79,7 @@ namespace PADI_DSTM
             {
                 throw new Exception("Error: Cannot read outside a transaction.");
             }
+
             foreach (string s in servers)
             {
                 IDataServer server = (IDataServer)Activator.GetObject(
@@ -102,6 +103,7 @@ namespace PADI_DSTM
             {
                 throw new Exception("Error: Cannot write outside a transaction.");
             }
+
             foreach (string s in servers)
             {
                 IDataServer server = (IDataServer)Activator.GetObject(
@@ -147,7 +149,7 @@ namespace PADI_DSTM
 
         public static bool TxAbort()
         {
-            return false;
+            return masterServer.TxAbort(currentTimestamp);
         }
 
         public static bool Status()

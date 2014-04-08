@@ -161,7 +161,6 @@ namespace ClientForms
             {
                 padInts[uid].Write(value);
                 appendToLog("Wrote value: " + value + " at PadInt with uid: " + uid + ".");
-                buttonRead_Click(sender, e);
             }
             catch (Exception ex)
             {

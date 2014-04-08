@@ -131,6 +131,7 @@ namespace PADI_DSTM
 
         public bool TxCommit(long timestamp)
         {
+            log.RemoveLogEntry(timestamp);
             return joinedTx.Remove(timestamp);
         }
 
@@ -141,7 +142,7 @@ namespace PADI_DSTM
                 padInts[uid].value = log.RestorePadInt(timestamp, uid);
             }
             log.RemoveLogEntry(timestamp);
-            return true;
+            return joinedTx.Remove(timestamp);
         }
 
         public bool Status()
