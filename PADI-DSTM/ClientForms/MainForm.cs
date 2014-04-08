@@ -10,11 +10,11 @@ using PADI_DSTM;
 
 namespace ClientForms
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
         Dictionary<int, PadInt> padInts = new Dictionary<int, PadInt>();
 
-        public Form1()
+        public MainForm()
         {
             InitializeComponent();
         }
@@ -29,7 +29,7 @@ namespace ClientForms
 
         private void appendToLog(string text)
         {
-            log.Text += text + "\r\n";
+            log.AppendText(text + "\r\n");
         }
 
         private void buttonFail_Click(object sender, EventArgs e)

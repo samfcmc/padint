@@ -164,7 +164,15 @@ namespace PADI_DSTM
 
         public PadIntMetadata AccessPadInt(int uid)
         {
-            return metadata[uid];
+            if (metadata.ContainsKey(uid))
+            {
+                return metadata[uid];
+            }
+            else
+            {
+                return null;
+            }
+            
         }
 
         public bool RegisterDataServer(string url)

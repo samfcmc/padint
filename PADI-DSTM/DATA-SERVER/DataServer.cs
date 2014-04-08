@@ -44,7 +44,7 @@ namespace PADI_DSTM
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Where is mah port?");
+            Console.WriteLine("Server port");
             string port = Console.ReadLine();
 
             TcpChannel channel = new TcpChannel(Convert.ToInt32(port));
@@ -54,10 +54,10 @@ namespace PADI_DSTM
                 "RemoteDataServer",
                 WellKnownObjectMode.Singleton);
 
-            Console.WriteLine("What is the master port?");
+            Console.WriteLine("Master Server Port");
             string master_port = Console.ReadLine();
             
-            Console.WriteLine("What is the master hostname?");
+            Console.WriteLine("Master Server address");
             string master_hostname = Console.ReadLine();
 
             RemoteDataServer.master = (IMasterServer)Activator.GetObject(
