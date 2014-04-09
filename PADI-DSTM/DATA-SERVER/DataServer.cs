@@ -103,6 +103,11 @@ namespace PADI_DSTM
                 padInts[uid].writeTimestamp = timestamp;
                 padInts[uid].value = newvalue;
             }
+            else
+            {
+                TxAbort(timestamp);
+                throw new Exception("TransactionAbortedException");
+            }
         }
 
         public int Read(int uid, long timestamp)
