@@ -90,7 +90,7 @@ namespace ClientForms
             }
             else
             {
-                appendToLog("Failed to commit transaction.");
+                appendToLog("Failed to commit transaction: Transaction Aborted.");
             }
         }
 

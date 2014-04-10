@@ -31,7 +31,12 @@ namespace PADI_DSTM
         private Dictionary<int, PadIntMetadata> metadata = new Dictionary<int, PadIntMetadata>();
 
         private Dictionary<long, PadiTransaction> transactions = new Dictionary<long, PadiTransaction>();
-        private long currentTimestamp = 0;
+        private long currentTimestamp = 1;
+
+        public PadiTransaction getTransaction(long timestamp)
+        {
+            return transactions[timestamp];
+        }
 
         public Dictionary<string, IDataServer> getDataServers()
         {
@@ -40,7 +45,9 @@ namespace PADI_DSTM
 
         public long TxBegin()
         {
-            transactions.Add(currentTimestamp, new PadiTransaction(currentTimestamp));
+            PadiTransaction tx = new PadiTransaction(currentTimestamp);
+            tx.state = STATE.RUNNING;
+            transactions.Add(currentTimestamp, tx);
             return currentTimestamp++;
         }
         
@@ -64,6 +71,15 @@ namespace PADI_DSTM
                 IDataServer server = (IDataServer)Activator.GetObject(
                     typeof(IDataServer),
                     s);
+                foreach (long l in server.getTxDependencies(timestamp))
+                {
+                    if (transactions[l].state != STATE.COMMITTED)
+                    {
+                        failed = true;
+                        break;
+                    }
+                }
+
                 servers.Add(server);
                 if(!server.TxPrepare(timestamp)) 
                 {
@@ -72,11 +88,7 @@ namespace PADI_DSTM
             }
             if(failed) 
             {
-                foreach(IDataServer server in servers) 
-                {
-                    server.TxAbort(timestamp);
-                }
-                transactions.Remove(timestamp);
+                TxAbort(timestamp);
                 return false;
             }
 
@@ -84,7 +96,8 @@ namespace PADI_DSTM
             {
                 server.TxCommit(timestamp);
             }
-            transactions.Remove(timestamp);
+            transactions[timestamp].state = STATE.COMMITTED;
+            //transactions.Remove(timestamp);
             return true;
         }
 
@@ -97,7 +110,8 @@ namespace PADI_DSTM
                     s);
                 server.TxAbort(timestamp);
             }
-            transactions.Remove(timestamp);
+            transactions[timestamp].state = STATE.ABORTED;
+            //transactions.Remove(timestamp);
             return true;
         }
 

@@ -13,30 +13,76 @@ namespace PADI_DSTM
     public class Log
     {
         Dictionary<long, Dictionary<int, int>> oldValues = new Dictionary<long, Dictionary<int, int>>();
+        Dictionary<long, Dictionary<int, long>> oldWriteTimestamps = new Dictionary<long, Dictionary<int, long>>();
 
         public void AddLogEntry(long timestamp)
         {
             oldValues.Add(timestamp, new Dictionary<int,int>());
+            oldWriteTimestamps.Add(timestamp, new Dictionary<int, long>());
         }
 
         public void RemoveLogEntry(long timestamp)
         {
             oldValues.Remove(timestamp);
+            oldWriteTimestamps.Remove(timestamp);
         }
 
-        public void StorePadInt(long timestamp, int uid, int val)
+        public void StorePadInt(long timestamp, int uid, int val, long writeTimestamp)
         {
-            oldValues[timestamp].Add(uid, val);
+            if (!oldValues[timestamp].Keys.Contains(uid))
+            {
+                oldValues[timestamp].Add(uid, val);
+                oldWriteTimestamps[timestamp].Add(uid, writeTimestamp);
+            }
         }
 
-        public int RestorePadInt(long timestamp, int uid)
+        public void RestorePadInt(PadInt p, long timestamp, int uid)
         {
-            return oldValues[timestamp][uid];
+            if (p.writeTimestamp > oldWriteTimestamps[timestamp][uid])
+            {
+                p.value = oldValues[timestamp][uid];
+                p.writeTimestamp = oldWriteTimestamps[timestamp][uid];
+            }
         }
 
         public Dictionary<int, int> GetTimestampUIDs(long timestamp)
         {
             return oldValues[timestamp];
+        }
+
+        public long GetOldTimestamp(int uid)
+        {
+            foreach (long timestamp in oldWriteTimestamps.Keys)
+            {
+                return oldWriteTimestamps[timestamp][uid];
+            }
+            return 0;
+        }
+
+        public int GetOldValue(int uid)
+        {
+            foreach (long timestamp in oldValues.Keys)
+            {
+                return oldValues[timestamp][uid];
+            }
+            return 0;
+        }
+
+        public bool Contains(long timestamp)
+        {
+            return oldValues.Keys.Contains(timestamp);
+        }
+
+        public bool ContainsPadInt(int uid)
+        {
+            foreach (long timestamp in oldWriteTimestamps.Keys)
+            {
+                if (oldWriteTimestamps[timestamp].Keys.Contains(uid))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 
@@ -79,34 +125,37 @@ namespace PADI_DSTM
     public class RemoteDataServer : MarshalByRefObject, IDataServer
     {
         Dictionary<int, PadInt> padInts = new Dictionary<int, PadInt>();
+        Dictionary<long, PadiTransaction> localTransactions = new Dictionary<long, PadiTransaction>();
         Log log = new Log();
         List<long> joinedTx = new List<long>();
         public static string myUrl;
         public static IMasterServer master;
+
+        public List<long> getTxDependencies(long timestamp)
+        {
+            return localTransactions[timestamp].dependencies;
+        }
 
         public void Write(int uid, long timestamp, int newvalue)
         {
             if (!joinedTx.Contains(timestamp))
             {
                 master.TxJoin(myUrl, timestamp);
+                localTransactions.Add(timestamp, master.getTransaction(timestamp));
                 joinedTx.Add(timestamp);
                 log.AddLogEntry(timestamp);
-                log.StorePadInt(timestamp, uid, padInts[uid].value);
             }
-            if (timestamp < padInts[uid].readTimestamp)
+            if (timestamp < padInts[uid].readTimestamp || timestamp < padInts[uid].writeTimestamp)
             {
-                TxAbort(timestamp);
+                master.TxAbort(timestamp);
                 throw new Exception("TransactionAbortedException");
-            }
-            else if (timestamp > padInts[uid].writeTimestamp)
-            {
-                padInts[uid].writeTimestamp = timestamp;
-                padInts[uid].value = newvalue;
             }
             else
             {
-                TxAbort(timestamp);
-                throw new Exception("TransactionAbortedException");
+                log.StorePadInt(timestamp, uid, padInts[uid].value, padInts[uid].writeTimestamp);
+
+                padInts[uid].writeTimestamp = timestamp;
+                padInts[uid].value = newvalue;
             }
         }
 
@@ -115,18 +164,33 @@ namespace PADI_DSTM
             if (!joinedTx.Contains(timestamp))
             {
                 master.TxJoin(myUrl, timestamp);
+                localTransactions.Add(timestamp, master.getTransaction(timestamp));
                 joinedTx.Add(timestamp);
+                log.AddLogEntry(timestamp);
             }
             if (padInts[uid].writeTimestamp > timestamp)
             {
-                TxAbort(timestamp);
+                master.TxAbort(timestamp);
                 throw new Exception("TransactionAbortedException");
             }
-            else if (padInts[uid].readTimestamp < timestamp)
+            else
             {
-                padInts[uid].readTimestamp = timestamp;
+                long tempTimestamp = padInts[uid].writeTimestamp;
+                int tempValue = padInts[uid].value;
+                if (log.ContainsPadInt(uid))
+                {
+                    tempValue = log.GetOldValue(uid);
+                    tempTimestamp = log.GetOldTimestamp(uid);
+                }
+                log.StorePadInt(timestamp, uid, tempValue, tempTimestamp);
+
+                if (padInts[uid].writeTimestamp > 0)
+                {
+                    localTransactions[timestamp].dependencies.Add(padInts[uid].writeTimestamp);
+                }
+                padInts[uid].readTimestamp = Math.Max(timestamp, padInts[uid].readTimestamp);
+                return padInts[uid].value;
             }
-            return padInts[uid].value;
         }
 
         public bool TxPrepare(long timestamp)
@@ -142,12 +206,23 @@ namespace PADI_DSTM
 
         public bool TxAbort(long timestamp)
         {
-            foreach(int uid in log.GetTimestampUIDs(timestamp).Keys)
+            if (log.Contains(timestamp))
             {
-                padInts[uid].value = log.RestorePadInt(timestamp, uid);
+                foreach (int uid in log.GetTimestampUIDs(timestamp).Keys)
+                {
+                    log.RestorePadInt(padInts[uid], timestamp, uid);
+                }
+                log.RemoveLogEntry(timestamp);
+                //localTransactions.Remove(timestamp);
+                joinedTx.Remove(timestamp);
+                return true;
             }
-            log.RemoveLogEntry(timestamp);
-            return joinedTx.Remove(timestamp);
+            else
+            {
+                //localTransactions.Remove(timestamp);
+                joinedTx.Remove(timestamp);
+                return true;
+            }
         }
 
         public bool Status()

@@ -18,6 +18,7 @@ namespace PADI_DSTM
     public interface IMasterServer : IServer
     {
         Dictionary<string, IDataServer> getDataServers();
+        PadiTransaction getTransaction(long timestamp);
         long TxBegin();
         bool TxJoin(string url, long timestamp);
         bool RegisterDataServer(string url);
@@ -27,6 +28,7 @@ namespace PADI_DSTM
 
     public interface IDataServer : IServer
     {
+        List<long> getTxDependencies(long timestamp);
         bool TxPrepare(long timestamp);
         int Read(int uid, long timestamp);
         void Write(int uid, long timestamp, int newvalue);
@@ -46,10 +48,20 @@ namespace PADI_DSTM
         }
     }
 
+    [Serializable]
+    public enum STATE {
+        RUNNING,
+        COMMITTED,
+        ABORTED
+    }
+
+    [Serializable]
     public class PadiTransaction
     {
         public long timestamp;
         public List<string> servers;
+        public STATE state;
+        public List<long> dependencies = new List<long>();
 
         public PadiTransaction(long timestamp)
         {
@@ -63,8 +75,8 @@ namespace PADI_DSTM
     {
         private int uid;
         public int value;
-        public long readTimestamp = -1;
-        public long writeTimestamp = -1;
+        public long readTimestamp = 0;
+        public long writeTimestamp = 0;
         public List<string> servers;
 
         public PadInt(int uid)
@@ -85,16 +97,9 @@ namespace PADI_DSTM
                 IDataServer server = (IDataServer)Activator.GetObject(
                     typeof(IDataServer),
                     s);
-                try
-                {
-                    return server.Read(this.uid, PadiDstm.currentTimestamp);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.StackTrace);
-                }
+                return server.Read(this.uid, PadiDstm.currentTimestamp);
             }
-            throw new Exception("Error: Could not contact the data servers.");
+            throw new Exception("Error: Could not retrieve value from the data servers.");
         }
 
         public void Write(int val)
