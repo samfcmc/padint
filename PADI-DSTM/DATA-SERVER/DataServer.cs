@@ -17,14 +17,16 @@ namespace PADI_DSTM
 
         public void AddLogEntry(long timestamp)
         {
-            oldValues.Add(timestamp, new Dictionary<int,int>());
+            oldValues.Add(timestamp, new Dictionary<int, int>());
             oldWriteTimestamps.Add(timestamp, new Dictionary<int, long>());
+            Console.WriteLine("Add log entry to timestamp: " + timestamp);
         }
 
         public void RemoveLogEntry(long timestamp)
         {
             oldValues.Remove(timestamp);
             oldWriteTimestamps.Remove(timestamp);
+            Console.WriteLine("Removed log entry from timestamp: " + timestamp);
         }
 
         public void StorePadInt(long timestamp, int uid, int val, long writeTimestamp)
@@ -33,6 +35,7 @@ namespace PADI_DSTM
             {
                 oldValues[timestamp].Add(uid, val);
                 oldWriteTimestamps[timestamp].Add(uid, writeTimestamp);
+                Console.WriteLine("Stored padint: " + uid + " with val: " + val + "and writetimestamp: " + writeTimestamp + " to timestamp: " + timestamp);
             }
         }
 
@@ -42,6 +45,7 @@ namespace PADI_DSTM
             {
                 p.value = oldValues[timestamp][uid];
                 p.writeTimestamp = oldWriteTimestamps[timestamp][uid];
+                Console.WriteLine("Restored padint: " + uid + " to val: " + p.value + "and writetimestamp: " + p.writeTimestamp + " in timestamp: " + timestamp);
             }
         }
 
@@ -54,7 +58,12 @@ namespace PADI_DSTM
         {
             foreach (long timestamp in oldWriteTimestamps.Keys)
             {
-                return oldWriteTimestamps[timestamp][uid];
+                /* Protects against uninitialized entries */
+                if (oldWriteTimestamps[timestamp].Count > 0)
+                {
+                    Console.WriteLine("Got old timstamp of padint: " + uid + " in timestamp: " + timestamp);
+                    return oldWriteTimestamps[timestamp][uid];
+                }
             }
             return -1;
         }
@@ -63,7 +72,12 @@ namespace PADI_DSTM
         {
             foreach (long timestamp in oldValues.Keys)
             {
-                return oldValues[timestamp][uid];
+                /* Protects against uninitialized entries */
+                if (oldValues[timestamp].Count > 0)
+                {
+                    Console.WriteLine("Got old value of padint: " + uid + " in timestamp: " + timestamp);
+                    return oldValues[timestamp][uid];
+                }
             }
             return -1;
         }
@@ -79,6 +93,7 @@ namespace PADI_DSTM
             {
                 if (oldWriteTimestamps[timestamp].Keys.Contains(uid))
                 {
+                    Console.WriteLine("Found padint: " + uid + " in timestamp: " + timestamp);
                     return true;
                 }
             }
@@ -102,7 +117,7 @@ namespace PADI_DSTM
 
             Console.WriteLine("Master Server Port");
             string master_port = "8086"; //Console.ReadLine();
-            
+
             Console.WriteLine("Master Server address");
             string master_hostname = "localhost"; //Console.ReadLine();
 
@@ -112,12 +127,12 @@ namespace PADI_DSTM
 
             RemoteDataServer.myUrl = "tcp://" + Dns.GetHostName() + ":" + port + "/RemoteDataServer";
             bool reg = RemoteDataServer.master.RegisterDataServer(RemoteDataServer.myUrl);
-            
-            if(reg)
+
+            if (reg)
             {
                 Console.WriteLine("Connected to MasterServer");
             }
-            
+
             Console.ReadLine();
         }
     }
@@ -144,6 +159,7 @@ namespace PADI_DSTM
 
         public void Write(int uid, long timestamp, int newvalue)
         {
+            PadInt padint = padInts[uid];
             if (!joinedTx.Contains(timestamp))
             {
                 master.TxJoin(myUrl, timestamp);
@@ -151,22 +167,23 @@ namespace PADI_DSTM
                 joinedTx.Add(timestamp);
                 log.AddLogEntry(timestamp);
             }
-            if (timestamp < padInts[uid].readTimestamp || timestamp < padInts[uid].writeTimestamp)
+            if (timestamp < padint.readTimestamp || timestamp < padint.writeTimestamp)
             {
                 master.TxAbort(timestamp);
                 throw new Exception("TransactionAbortedException");
             }
             else
             {
-                log.StorePadInt(timestamp, uid, padInts[uid].value, padInts[uid].writeTimestamp);
+                log.StorePadInt(timestamp, uid, padint.value, padint.writeTimestamp);
 
-                padInts[uid].writeTimestamp = timestamp;
-                padInts[uid].value = newvalue;
+                padint.writeTimestamp = timestamp;
+                padint.value = newvalue;
             }
         }
 
         public int Read(int uid, long timestamp)
         {
+            PadInt padint = padInts[uid];
             if (!joinedTx.Contains(timestamp))
             {
                 master.TxJoin(myUrl, timestamp);
@@ -174,28 +191,28 @@ namespace PADI_DSTM
                 joinedTx.Add(timestamp);
                 log.AddLogEntry(timestamp);
             }
-            if (padInts[uid].writeTimestamp > timestamp)
+            if (padint.writeTimestamp > timestamp)
             {
                 master.TxAbort(timestamp);
                 throw new Exception("TransactionAbortedException");
             }
             else
             {
-                long tempTimestamp = padInts[uid].writeTimestamp;
-                int tempValue = padInts[uid].value;
+                long oldWriteTimestamp = padint.writeTimestamp;
+                int oldValue = padint.value;
                 if (log.ContainsPadInt(uid))
                 {
-                    tempValue = log.GetOldValue(uid);
-                    tempTimestamp = log.GetOldTimestamp(uid);
+                    oldValue = log.GetOldValue(uid);
+                    oldWriteTimestamp = log.GetOldTimestamp(uid);
                 }
-                log.StorePadInt(timestamp, uid, tempValue, tempTimestamp);
+                log.StorePadInt(timestamp, uid, oldValue, oldWriteTimestamp);
 
-                if (padInts[uid].writeTimestamp > 0 && padInts[uid].writeTimestamp != timestamp)
+                if (padint.writeTimestamp > 0 && padint.writeTimestamp != timestamp)
                 {
-                    localTransactions[timestamp].dependencies.Add(padInts[uid].writeTimestamp);
+                    localTransactions[timestamp].dependencies.Add(padint.writeTimestamp);
                 }
-                padInts[uid].readTimestamp = Math.Max(timestamp, padInts[uid].readTimestamp);
-                return padInts[uid].value;
+                padint.readTimestamp = Math.Max(timestamp, padint.readTimestamp);
+                return padint.value;
             }
         }
 
@@ -243,7 +260,7 @@ namespace PADI_DSTM
         {
             foreach (IChannel channel in ChannelServices.RegisteredChannels)
             {
-                ChannelServices.UnregisterChannel(channel);                    
+                ChannelServices.UnregisterChannel(channel);
             }
             Environment.Exit(0);
         }
@@ -267,7 +284,7 @@ namespace PADI_DSTM
                 return null;
             }
             PadInt p = new PadInt(uid);
-            foreach(string s in metadata.servers) 
+            foreach (string s in metadata.servers)
             {
                 p.servers.Add(s);
             }
