@@ -56,7 +56,7 @@ namespace PADI_DSTM
             {
                 return oldWriteTimestamps[timestamp][uid];
             }
-            return 0;
+            return -1;
         }
 
         public int GetOldValue(int uid)
@@ -65,7 +65,7 @@ namespace PADI_DSTM
             {
                 return oldValues[timestamp][uid];
             }
-            return 0;
+            return -1;
         }
 
         public bool Contains(long timestamp)
@@ -91,7 +91,7 @@ namespace PADI_DSTM
         static void Main(string[] args)
         {
             Console.WriteLine("Server port");
-            string port = Console.ReadLine();
+            string port = "2001";// Console.ReadLine();
 
             TcpChannel channel = new TcpChannel(Convert.ToInt32(port));
             ChannelServices.RegisterChannel(channel, false);
@@ -101,10 +101,10 @@ namespace PADI_DSTM
                 WellKnownObjectMode.Singleton);
 
             Console.WriteLine("Master Server Port");
-            string master_port = Console.ReadLine();
+            string master_port = "8086"; //Console.ReadLine();
             
             Console.WriteLine("Master Server address");
-            string master_hostname = Console.ReadLine();
+            string master_hostname = "localhost"; //Console.ReadLine();
 
             RemoteDataServer.master = (IMasterServer)Activator.GetObject(
                 typeof(IMasterServer),
@@ -125,6 +125,12 @@ namespace PADI_DSTM
     public class RemoteDataServer : MarshalByRefObject, IDataServer
     {
         Dictionary<int, PadInt> padInts = new Dictionary<int, PadInt>();
+        /// <summary>
+        /// Stores the dependencies of all transactions in the server. A 
+        /// transaction can only depend on another transaction, if it reads 
+        /// the write of another transaction in the same padint in the same 
+        /// server.
+        /// </summary>
         Dictionary<long, PadiTransaction> localTransactions = new Dictionary<long, PadiTransaction>();
         Log log = new Log();
         List<long> joinedTx = new List<long>();
@@ -184,7 +190,7 @@ namespace PADI_DSTM
                 }
                 log.StorePadInt(timestamp, uid, tempValue, tempTimestamp);
 
-                if (padInts[uid].writeTimestamp > 0)
+                if (padInts[uid].writeTimestamp > 0 && padInts[uid].writeTimestamp != timestamp)
                 {
                     localTransactions[timestamp].dependencies.Add(padInts[uid].writeTimestamp);
                 }
