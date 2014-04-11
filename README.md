@@ -15,14 +15,14 @@
 
 This file contains a brief explanation on how to start the servers in the PADI-DSTM project.
 
-CONTENTS:
-1. How to start the master server
-2. How to start the data servers
-3. How to work with the client interface
+<b> CONTENTS: </b>
+- How to start the master server
+- How to start the data servers
+- How to work with the client interface
 
 ---------------------------------
 
-1. HOW TO START THE MASTER SERVER
+<b> HOW TO START THE MASTER SERVER </b>
 
 - Open the project solution (.sln) on Visual Studio (if needed)
 - (Re)Build the solution (if needed)
@@ -30,7 +30,7 @@ CONTENTS:
 - When the console application opens up, insert the desired PORT for the master server
 NOTE: The master server is always working under the localhost ip/hostname
 
-2. HOW TO START THE DATA SERVERS
+<b> HOW TO START THE DATA SERVERS </b>
 
 - Open the project solution (.sln) on Visual Studio (if needed)
 - (Re)Build the solution (if needed)
@@ -38,7 +38,7 @@ NOTE: The master server is always working under the localhost ip/hostname
 - When the console application opens up, insert the SERVER PORT, then the MASTER PORT and the MASTER HOSTNAME (localhost in this case)
 - You can run as many data servers as you want, you just need to specify different ports for each one (if they are running in the same machine)
 
-3. HOW TO WORK WITH THE CLIENT INTERFACE
+<b> HOW TO WORK WITH THE CLIENT INTERFACE </b>
 
 - The client interface (ClientForms project) provides all the PADI-DSTM interface methods through the click of buttons.
 - First click the 'connect' button to connect to the master server
