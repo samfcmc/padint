@@ -37,9 +37,8 @@ namespace PADI_DSTM
         public static string myUrl;
         public static IMasterServer master;
 
-
-        private bool frozen = false;
-        private object monitor = new object();
+        bool frozen = false;
+        object monitor = new object();
 
         public List<long> getTxDependencies(long timestamp)
         {
@@ -156,7 +155,7 @@ namespace PADI_DSTM
                 return false;
             }
 
-            else 
+            else
             {
                 Monitor.Enter(monitor, ref this.frozen);
             }
@@ -175,8 +174,8 @@ namespace PADI_DSTM
                 {
                     Monitor.PulseAll(monitor);
                     this.frozen = false;
-                }             
-            }                           
+                }
+            }
             return true;
         }
 
@@ -217,6 +216,6 @@ namespace PADI_DSTM
                 }
             }
         }
-
     }
+
 }
