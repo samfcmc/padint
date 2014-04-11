@@ -11,6 +11,16 @@ using System.Threading;
 
 namespace PADI_DSTM
 {
+    class Locker
+    {
+        private int id;
+
+        public Locker(int id) 
+        {
+            this.id = id;
+        }
+    }
+
     public class RemoteDataServer : MarshalByRefObject, IDataServer
     {
         Dictionary<int, PadInt> padInts = new Dictionary<int, PadInt>();
@@ -27,8 +37,9 @@ namespace PADI_DSTM
         public static string myUrl;
         public static IMasterServer master;
 
-        bool frozen = false;
-        object freezeMonitor = new object();
+
+        private bool frozen = false;
+        private object monitor = new object();
 
         public List<long> getTxDependencies(long timestamp)
         {
@@ -37,6 +48,8 @@ namespace PADI_DSTM
 
         public void Write(int uid, long timestamp, int newvalue)
         {
+            checkFreeze();
+
             PadInt padint = padInts[uid];
             if (!joinedTx.Contains(timestamp))
             {
@@ -61,6 +74,8 @@ namespace PADI_DSTM
 
         public int Read(int uid, long timestamp)
         {
+            checkFreeze();
+
             PadInt padint = padInts[uid];
             if (!joinedTx.Contains(timestamp))
             {
@@ -87,16 +102,22 @@ namespace PADI_DSTM
 
         public bool TxPrepare(long timestamp)
         {
+            checkFreeze();
+
             return true;
         }
 
         public bool TxCommit(long timestamp)
         {
+            checkFreeze();
+
             return joinedTx.Remove(timestamp);
         }
 
         public bool TxAbort(long timestamp)
         {
+            checkFreeze();
+
             log.RemoveAllEntries(timestamp);
             foreach (int uid in usedPadInts)
             {
@@ -109,6 +130,8 @@ namespace PADI_DSTM
 
         public bool Status()
         {
+            checkFreeze();
+
             Console.WriteLine("Printing Status");
             Console.WriteLine("---------------");
             Console.WriteLine("Up and Running!");
@@ -117,6 +140,8 @@ namespace PADI_DSTM
 
         public void Fail()
         {
+            checkFreeze();
+
             foreach (IChannel channel in ChannelServices.RegisteredChannels)
             {
                 ChannelServices.UnregisterChannel(channel);
@@ -126,24 +151,32 @@ namespace PADI_DSTM
 
         public bool Freeze()
         {
-            if (!this.frozen)
+            if (this.frozen)
             {
-                Monitor.Enter(freezeMonitor, ref this.frozen);
+                return false;
+            }
+
+            else 
+            {
+                Monitor.Enter(monitor, ref this.frozen);
             }
             return true;
         }
 
         public bool Recover()
         {
-            lock (freezeMonitor)
+            if (!this.frozen)
             {
-                while (this.frozen)
-                {
-                    Monitor.PulseAll(freezeMonitor);
-                    this.frozen = false;
-                }
+                return false;
             }
-            
+            lock ("test")
+            {
+                if (this.frozen)
+                {
+                    Monitor.PulseAll(monitor);
+                    this.frozen = false;
+                }             
+            }                           
             return true;
         }
 
@@ -175,13 +208,14 @@ namespace PADI_DSTM
 
         private void checkFreeze()
         {
-            lock(freezeMonitor) {
+            lock (monitor)
+            {
                 while (this.frozen)
                 {
-                    Monitor.Wait(freezeMonitor);
+                    Monitor.Wait(monitor);
                     this.frozen = false;
                 }
-            }           
+            }
         }
 
     }
