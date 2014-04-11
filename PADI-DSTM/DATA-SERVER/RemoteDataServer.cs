@@ -23,6 +23,7 @@ namespace PADI_DSTM
         Dictionary<long, PadiTransaction> localTransactions = new Dictionary<long, PadiTransaction>();
         Log log = new Log();
         List<long> joinedTx = new List<long>();
+        List<int> usedPadInts = new List<int>();
         public static string myUrl;
         public static IMasterServer master;
 
@@ -42,7 +43,6 @@ namespace PADI_DSTM
                 master.TxJoin(myUrl, timestamp);
                 localTransactions.Add(timestamp, master.getTransaction(timestamp));
                 joinedTx.Add(timestamp);
-                log.AddLogEntry(timestamp);
             }
             if (timestamp < padint.readTimestamp || timestamp < padint.writeTimestamp)
             {
@@ -52,8 +52,8 @@ namespace PADI_DSTM
             }
             else
             {
-                log.StorePadInt(timestamp, uid, padint.value, padint.writeTimestamp);
-
+                log.AddNewLogEntry(timestamp, uid, newvalue);
+                usedPadInts.Add(uid);
                 padint.writeTimestamp = timestamp;
                 padint.value = newvalue;
             }
@@ -67,7 +67,6 @@ namespace PADI_DSTM
                 master.TxJoin(myUrl, timestamp);
                 localTransactions.Add(timestamp, master.getTransaction(timestamp));
                 joinedTx.Add(timestamp);
-                log.AddLogEntry(timestamp);
             }
             if (padint.writeTimestamp > timestamp)
             {
@@ -77,15 +76,6 @@ namespace PADI_DSTM
             }
             else
             {
-                long oldWriteTimestamp = padint.writeTimestamp;
-                int oldValue = padint.value;
-                if (log.ContainsPadInt(uid))
-                {
-                    oldValue = log.GetOldValue(uid);
-                    oldWriteTimestamp = log.GetOldTimestamp(uid);
-                }
-                log.StorePadInt(timestamp, uid, oldValue, oldWriteTimestamp);
-
                 if (padint.writeTimestamp > 0 && padint.writeTimestamp != timestamp)
                 {
                     localTransactions[timestamp].dependencies.Add(padint.writeTimestamp);
@@ -102,29 +92,19 @@ namespace PADI_DSTM
 
         public bool TxCommit(long timestamp)
         {
-            log.RemoveLogEntry(timestamp);
             return joinedTx.Remove(timestamp);
         }
 
         public bool TxAbort(long timestamp)
         {
-            if (log.Contains(timestamp))
+            log.RemoveAllEntries(timestamp);
+            foreach (int uid in usedPadInts)
             {
-                foreach (int uid in log.GetTimestampUIDs(timestamp).Keys)
-                {
-                    log.RestorePadInt(padInts[uid], timestamp, uid);
-                }
-                log.RemoveLogEntry(timestamp);
-                //localTransactions.Remove(timestamp);
-                joinedTx.Remove(timestamp);
-                return true;
+                padInts[uid].value = log.getLastValue(uid);
+                padInts[uid].writeTimestamp = log.getLastWriteTimestamp(uid);
             }
-            else
-            {
-                //localTransactions.Remove(timestamp);
-                joinedTx.Remove(timestamp);
-                return true;
-            }
+            joinedTx.Remove(timestamp);
+            return true;
         }
 
         public bool Status()
@@ -170,6 +150,7 @@ namespace PADI_DSTM
                 p.servers.Add(s);
             }
             padInts.Add(uid, p);
+            log.AddNewLogEntry(0, uid, 0);
             Console.WriteLine("Created PadInt with uid: " + uid);
             return p;
         }

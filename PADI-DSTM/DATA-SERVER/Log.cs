@@ -5,94 +5,68 @@ using System.Text;
 
 namespace PADI_DSTM
 {
+    public class LogEntry 
+    {
+        public long transactionTimestamp;
+        public int padIntUID;
+        public int padIntValue;
+
+        public LogEntry(long ts, int uid, int val)
+        {
+            this.transactionTimestamp = ts;
+            this.padIntUID = uid;
+            this.padIntValue = val;
+        }
+    }
+
     public class Log
     {
-        Dictionary<long, Dictionary<int, int>> oldValues = new Dictionary<long, Dictionary<int, int>>();
-        Dictionary<long, Dictionary<int, long>> oldWriteTimestamps = new Dictionary<long, Dictionary<int, long>>();
+        List<LogEntry> logEntries = new List<LogEntry>();
 
-        public void AddLogEntry(long timestamp)
+        public void AddNewLogEntry(long timestamp, int uid, int value)
         {
-            oldValues.Add(timestamp, new Dictionary<int, int>());
-            oldWriteTimestamps.Add(timestamp, new Dictionary<int, long>());
-            Console.WriteLine("Add log entry to timestamp: " + timestamp);
+            logEntries.Add(new LogEntry(timestamp, uid, value));
         }
 
-        public void RemoveLogEntry(long timestamp)
+        public void RemoveAllEntries(long timestamp)
         {
-            oldValues.Remove(timestamp);
-            oldWriteTimestamps.Remove(timestamp);
-            Console.WriteLine("Removed log entry from timestamp: " + timestamp);
-        }
+            List<LogEntry> entriesToRemove = new List<LogEntry>();
 
-        public void StorePadInt(long timestamp, int uid, int val, long writeTimestamp)
-        {
-            if (!oldValues[timestamp].Keys.Contains(uid))
+            foreach (LogEntry l in logEntries)
             {
-                oldValues[timestamp].Add(uid, val);
-                oldWriteTimestamps[timestamp].Add(uid, writeTimestamp);
-                Console.WriteLine("Stored padint: " + uid + " with val: " + val + "and writetimestamp: " + writeTimestamp + " to timestamp: " + timestamp);
-            }
-        }
-
-        public void RestorePadInt(PadInt p, long timestamp, int uid)
-        {
-            if (p.writeTimestamp > oldWriteTimestamps[timestamp][uid])
-            {
-                p.value = oldValues[timestamp][uid];
-                p.writeTimestamp = oldWriteTimestamps[timestamp][uid];
-                Console.WriteLine("Restored padint: " + uid + " to val: " + p.value + "and writetimestamp: " + p.writeTimestamp + " in timestamp: " + timestamp);
-            }
-        }
-
-        public Dictionary<int, int> GetTimestampUIDs(long timestamp)
-        {
-            return oldValues[timestamp];
-        }
-
-        public long GetOldTimestamp(int uid)
-        {
-            foreach (long timestamp in oldWriteTimestamps.Keys)
-            {
-                /* Protects against uninitialized entries */
-                if (oldWriteTimestamps[timestamp].Count > 0)
+                if (l.transactionTimestamp == timestamp)
                 {
-                    Console.WriteLine("Got old timstamp of padint: " + uid + " in timestamp: " + timestamp);
-                    return oldWriteTimestamps[timestamp][uid];
+                    entriesToRemove.Add(l);
                 }
             }
-            return -1;
+            foreach (LogEntry l in entriesToRemove)
+            {
+                logEntries.Remove(l);
+            }
         }
 
-        public int GetOldValue(int uid)
+        public int getLastValue(int uid)
         {
-            foreach (long timestamp in oldValues.Keys)
+            for (int i = logEntries.Count-1; i >= 0; i--)
             {
-                /* Protects against uninitialized entries */
-                if (oldValues[timestamp].Count > 0)
+                if (logEntries[i].padIntUID == uid)
                 {
-                    Console.WriteLine("Got old value of padint: " + uid + " in timestamp: " + timestamp);
-                    return oldValues[timestamp][uid];
+                    return logEntries[i].padIntValue;
                 }
             }
-            return -1;
+            return 0;
         }
 
-        public bool Contains(long timestamp)
+        public long getLastWriteTimestamp(int uid)
         {
-            return oldValues.Keys.Contains(timestamp);
-        }
-
-        public bool ContainsPadInt(int uid)
-        {
-            foreach (long timestamp in oldWriteTimestamps.Keys)
+            for (int i = logEntries.Count - 1; i >= 0; i--)
             {
-                if (oldWriteTimestamps[timestamp].Keys.Contains(uid))
+                if (logEntries[i].padIntUID == uid)
                 {
-                    Console.WriteLine("Found padint: " + uid + " in timestamp: " + timestamp);
-                    return true;
+                    return logEntries[i].transactionTimestamp;
                 }
             }
-            return false;
+            return 0;
         }
     }
 }
