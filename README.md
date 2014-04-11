@@ -32,12 +32,14 @@ NOTE: The master server is always working under the localhost ip/hostname
 - (Re)Build the solution (if needed)
 - Run the DATA-SERVER project (with our without debug mode)
 - When the console application opens up, insert the SERVER PORT, then the MASTER PORT and the MASTER HOSTNAME (localhost in this case)
+- You can run as many data servers as you want, you just need to specify different ports for each one (if they are running in the same machine)
 
 3. HOW TO WORK WITH THE CLIENT INTERFACE
 
 - The client interface (ClientForms project) provides all the PADI-DSTM interface methods through the click of buttons.
 - First click the 'connect' button to connect to the master server
 - Click anything else to create / access / read or write on PadInts and even Fail/Freeze/Recover any data server.
+- You can also run as many clients as you want.
 
  ===========
 |    END    |
