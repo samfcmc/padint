@@ -28,7 +28,7 @@ namespace PADI_DSTM
         public static IMasterServer master;
 
         bool frozen = false;
-        object test = new object();
+        object freezeMonitor = new object();
 
         public List<long> getTxDependencies(long timestamp)
         {
@@ -72,7 +72,7 @@ namespace PADI_DSTM
             {
                 master.TxAbort(timestamp);
                 throw new TransactionAbortedException(timestamp,
-                    "Transaction aborted because some transaction wrote before (WTS > TS)");
+                    "Transaction aborted because a more recent transaction wrote before (WTS > TS)");
             }
             else
             {
@@ -128,18 +128,18 @@ namespace PADI_DSTM
         {
             if (!this.frozen)
             {
-                Monitor.Enter(test, ref this.frozen);
+                Monitor.Enter(freezeMonitor, ref this.frozen);
             }
             return true;
         }
 
         public bool Recover()
         {
-            lock (test)
+            lock (freezeMonitor)
             {
                 while (this.frozen)
                 {
-                    Monitor.PulseAll(test);
+                    Monitor.PulseAll(freezeMonitor);
                     this.frozen = false;
                 }
             }
@@ -175,10 +175,10 @@ namespace PADI_DSTM
 
         private void checkFreeze()
         {
-            lock(test) {
+            lock(freezeMonitor) {
                 while (this.frozen)
                 {
-                    Monitor.Wait(test);
+                    Monitor.Wait(freezeMonitor);
                     this.frozen = false;
                 }
             }           
