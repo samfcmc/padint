@@ -234,7 +234,7 @@
             this.label2.TabIndex = 21;
             this.label2.Text = "value";
             // 
-            // Form1
+            // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -259,8 +259,8 @@
             this.Controls.Add(this.masterPort);
             this.Controls.Add(this.buttonConnect);
             this.Controls.Add(this.masterHost);
-            this.Name = "Form1";
-            this.Text = "Form1";
+            this.Name = "MainForm";
+            this.Text = "PADILib Test Client";
             this.ResumeLayout(false);
             this.PerformLayout();
 

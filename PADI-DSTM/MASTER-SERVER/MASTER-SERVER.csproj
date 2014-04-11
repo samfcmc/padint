@@ -8,7 +8,7 @@
     <ProjectGuid>{18446977-B56D-4837-88A4-1602051D97D7}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MASTER_SERVER</RootNamespace>
+    <RootNamespace>PADI_DSTM</RootNamespace>
     <AssemblyName>MASTER-SERVER</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
@@ -47,6 +47,7 @@
   <ItemGroup>
     <Compile Include="MasterServer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RemoteMasterServer.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PADI-DSTM\PADI-DSTM.csproj">

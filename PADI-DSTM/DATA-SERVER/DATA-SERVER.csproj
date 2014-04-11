@@ -8,7 +8,7 @@
     <ProjectGuid>{FA69956D-7298-4867-9754-71E5DABA21A1}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DATA_SERVER</RootNamespace>
+    <RootNamespace>PADI_DSTM</RootNamespace>
     <AssemblyName>DATA-SERVER</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
@@ -45,7 +45,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataServer.cs" />
+    <Compile Include="Exceptions\TransactionAbortedException.cs" />
+    <Compile Include="Log.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RemoteDataServer.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PADI-DSTM\PADI-DSTM.csproj">
