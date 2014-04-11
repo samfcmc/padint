@@ -126,13 +126,24 @@ namespace PADI_DSTM
 
         public bool Freeze()
         {
-            Monitor.Enter(freezeMonitor, ref this.frozen);
+            if (!this.frozen)
+            {
+                Monitor.Enter(test, ref this.frozen);
+            }
             return true;
         }
 
         public bool Recover()
         {
-            Monitor.PulseAll(this.frozen);
+            lock (test)
+            {
+                while (this.frozen)
+                {
+                    Monitor.PulseAll(test);
+                    this.frozen = false;
+                }
+            }
+            
             return true;
         }
 
