@@ -157,7 +157,8 @@ namespace PADI_DSTM
 
             else
             {
-                Monitor.Enter(monitor, ref this.frozen);
+                //Monitor.Enter(monitor, ref this.frozen);
+                this.frozen = true;
             }
             return true;
         }
@@ -168,7 +169,7 @@ namespace PADI_DSTM
             {
                 return false;
             }
-            lock ("test")
+            lock (monitor)
             {
                 if (this.frozen)
                 {
@@ -212,7 +213,6 @@ namespace PADI_DSTM
                 while (this.frozen)
                 {
                     Monitor.Wait(monitor);
-                    this.frozen = false;
                 }
             }
         }
