@@ -28,7 +28,10 @@ namespace PADI_DSTM
 
     public interface IDataServer : IServer
     {
-        List<long> getTxDependencies(long timestamp);
+        bool Echo();
+        string GetNextServer();
+        void SetNextServer(string next);
+        List<long> GetTxDependencies(long timestamp);
         bool TxPrepare(long timestamp);
         int Read(int uid, long timestamp);
         void Write(int uid, long timestamp, int newvalue);

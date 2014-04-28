@@ -37,10 +37,30 @@ namespace PADI_DSTM
         public static string myUrl;
         public static IMasterServer master;
 
+        /// <summary>
+        /// The next server on the ring of servers to ping, to detect faults.
+        /// </summary>
+        public static Heartbeat heartbeat = new Heartbeat();
+
         bool frozen = false;
         object monitor = new object();
 
-        public List<long> getTxDependencies(long timestamp)
+        public bool Echo()
+        {
+            return true;
+        }
+
+        public string GetNextServer()
+        {
+            return heartbeat.nextServer;
+        }
+
+        public void SetNextServer(string next)
+        {
+            heartbeat.nextServer = next;
+        }
+
+        public List<long> GetTxDependencies(long timestamp)
         {
             return localTransactions[timestamp].dependencies;
         }

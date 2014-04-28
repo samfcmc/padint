@@ -31,6 +31,9 @@ namespace PADI_DSTM
 
             launchDataServer(port, masterUrl);
 
+            TimerCallback tcb = RemoteDataServer.heartbeat.Ping;
+            Timer timer = new Timer(tcb,null,0,250);
+
             Console.ReadLine();
         }
 

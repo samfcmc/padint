@@ -8,6 +8,7 @@ namespace PADI_DSTM
     public class RemoteMasterServer : MarshalByRefObject, IMasterServer
     {
         private Dictionary<string, IDataServer> dataServers = new Dictionary<string, IDataServer>();
+        private Dictionary<string, string> nextServers = new Dictionary<string, string>();
         private Dictionary<int, PadIntMetadata> metadata = new Dictionary<int, PadIntMetadata>();
 
         private Dictionary<long, PadiTransaction> transactions = new Dictionary<long, PadiTransaction>();
@@ -16,6 +17,11 @@ namespace PADI_DSTM
         public PadiTransaction getTransaction(long timestamp)
         {
             return transactions[timestamp];
+        }
+
+        public string GetNextServer(string dataServer)
+        {
+            return nextServers[dataServer];
         }
 
         public Dictionary<string, IDataServer> getDataServers()
@@ -51,7 +57,7 @@ namespace PADI_DSTM
                 IDataServer server = (IDataServer)Activator.GetObject(
                     typeof(IDataServer),
                     s);
-                foreach (long l in server.getTxDependencies(timestamp))
+                foreach (long l in server.GetTxDependencies(timestamp))
                 {
                     if (transactions[l].state != STATE.COMMITTED)
                     {
@@ -180,6 +186,23 @@ namespace PADI_DSTM
                 typeof(IDataServer),
                 url);
             dataServers.Add(url, remoteServer);
+
+            if (nextServers.Count == 0)
+            {
+                remoteServer.SetNextServer(url);
+            }
+            else
+            {
+                string theOne = nextServers.Keys.ElementAt<string>(new Random().Next(0, nextServers.Keys.Count));
+                remoteServer.SetNextServer(nextServers[theOne]);
+                nextServers[theOne] = url;
+                IDataServer theOneServer = (IDataServer)Activator.GetObject(
+                    typeof(IDataServer),
+                    theOne);
+                theOneServer.SetNextServer(url);
+            }
+            nextServers.Add(url, remoteServer.GetNextServer());
+            
             Console.WriteLine("Server with url " + url + " is now connected.");
             return true;
         }
