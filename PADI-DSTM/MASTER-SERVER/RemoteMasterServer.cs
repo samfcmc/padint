@@ -14,6 +14,15 @@ namespace PADI_DSTM
         private Dictionary<long, PadiTransaction> transactions = new Dictionary<long, PadiTransaction>();
         private long currentTimestamp = 1;
 
+        public string NotifyFault(string notifier, string faultyServer)
+        {
+            //TODO: insert object replication from faulty server here
+            string faultyNext = nextServers[faultyServer];
+            nextServers.Remove(faultyServer);
+            nextServers[notifier] = faultyNext;
+            return faultyNext;
+        }
+
         public PadiTransaction getTransaction(long timestamp)
         {
             return transactions[timestamp];

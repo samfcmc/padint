@@ -15,6 +15,8 @@ namespace PADI_DSTM
 {
     public class DataServer
     {
+        private static const int TIMER_PERIOD = 5000;
+
         static void Main(string[] args)
         {
             Console.WriteLine("Server port");
@@ -32,7 +34,7 @@ namespace PADI_DSTM
             launchDataServer(port, masterUrl);
 
             TimerCallback tcb = RemoteDataServer.heartbeat.Ping;
-            Timer timer = new Timer(tcb,null,0,250);
+            Timer timer = new Timer(tcb, null, 0, TIMER_PERIOD);
 
             Console.ReadLine();
         }

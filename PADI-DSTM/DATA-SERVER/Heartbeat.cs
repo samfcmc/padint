@@ -22,8 +22,8 @@ namespace PADI_DSTM
             }
             catch (SocketException e)
             {
-                //TODO: master logic goes here
                 Console.WriteLine("Server with url {0} is not responding.", nextServer);
+                nextServer = RemoteDataServer.master.NotifyFault(RemoteDataServer.myUrl, nextServer);
             }
         }
     }

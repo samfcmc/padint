@@ -17,6 +17,7 @@ namespace PADI_DSTM
 
     public interface IMasterServer : IServer
     {
+        string NotifyFault(string notifier, string faultyServer);
         Dictionary<string, IDataServer> getDataServers();
         PadiTransaction getTransaction(long timestamp);
         long TxBegin();
