@@ -45,6 +45,15 @@ namespace PADI_DSTM
         bool frozen = false;
         object monitor = new object();
 
+        public void StorePadInt(int uid, PadInt p)
+        {
+            if (!padInts.Keys.Contains(uid))
+            {
+                padInts.Add(uid, p);
+                Console.WriteLine("Re-Stored PadInt with uid {0}.", uid);
+            }
+        }
+
         public bool Echo()
         {
             return true;

@@ -14,9 +14,39 @@ namespace PADI_DSTM
         private Dictionary<long, PadiTransaction> transactions = new Dictionary<long, PadiTransaction>();
         private long currentTimestamp = 1;
 
+        private void RestorePadInts(string faultyServer)
+        {
+            dataServers.Remove(faultyServer);
+            foreach (PadIntMetadata meta in metadata.Values)
+            {
+                if (meta.servers.Contains(faultyServer))
+                {
+                    meta.servers.Remove(faultyServer);
+                    IDataServer dataServer = (IDataServer)Activator.GetObject(
+                        typeof(IDataServer),
+                        meta.servers.ToArray()[0]); //there's only one element in the list after removing the faulty server
+                    PadInt p = dataServer.AccessPadInt(meta.uid);
+                    p.servers.Remove(faultyServer);
+
+                    foreach (string server in dataServers.Keys)
+                    {
+                        if (!meta.servers.ToArray()[0].Equals(server))
+                        {
+                            p.servers.Add(server);
+                            dataServers[server].StorePadInt(meta.uid, p);
+                            meta.servers.Add(server);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
         public string NotifyFault(string notifier, string faultyServer)
         {
             //TODO: insert object replication from faulty server here
+            RestorePadInts(faultyServer);
+
             string faultyNext = nextServers[faultyServer];
             nextServers.Remove(faultyServer);
             nextServers[notifier] = faultyNext;

@@ -29,6 +29,7 @@ namespace PADI_DSTM
 
     public interface IDataServer : IServer
     {
+        void StorePadInt(int uid, PadInt p);
         bool Echo();
         string GetNextServer();
         void SetNextServer(string next);
