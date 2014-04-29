@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Net.Sockets;
 
 namespace PADI_DSTM
 {
@@ -97,21 +98,35 @@ namespace PADI_DSTM
                 throw new Exception("Error: Cannot read outside a transaction.");
             }
 
+            int val = 0;
             foreach (string s in servers)
             {
                 IDataServer server = (IDataServer)Activator.GetObject(
                     typeof(IDataServer),
                     s);
+                val = TryRead(server);
+                break;
+            }
+            return val;
+        }
+
+        private int TryRead(IDataServer server)
+        {
+            int tries = 10;
+            while (tries > 0)
+            {
                 try
                 {
                     return server.Read(this.uid, PadiDstm.currentTimestamp);
                 }
-                catch (System.Net.Sockets.SocketException e)
+                catch (SocketException e)
                 {
-                    continue;
+                    PadInt refreshed = PadiDstm.AccessPadInt(uid);
+                    servers = refreshed.servers;
+                    tries--;
                 }
             }
-            throw new Exception("Error: Could not retrieve value from the data servers.");
+            throw new Exception("Timeout Error: Could not reach the servers where the PadInt was stored.");
         }
 
         public void Write(int val)
@@ -120,13 +135,30 @@ namespace PADI_DSTM
             {
                 throw new Exception("Error: Cannot write outside a transaction.");
             }
-
             foreach (string s in servers)
             {
                 IDataServer server = (IDataServer)Activator.GetObject(
                     typeof(IDataServer),
                     s);
-                server.Write(this.uid, PadiDstm.currentTimestamp, val);
+                TryWrite(server, val);
+            }
+        }
+
+        private void TryWrite(IDataServer server, int val)
+        {
+            int tries = 10;
+            while(tries > 0) {
+                try
+                {
+                    server.Write(this.uid, PadiDstm.currentTimestamp, val);
+                    return;
+                }
+                catch (SocketException e)
+                {
+                    PadInt refreshed = PadiDstm.AccessPadInt(uid);
+                    servers = refreshed.servers;
+                    tries--;
+                }
             }
         }
     }
