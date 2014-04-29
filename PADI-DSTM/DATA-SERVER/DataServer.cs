@@ -15,7 +15,7 @@ namespace PADI_DSTM
 {
     public class DataServer
     {
-        private const int TIMER_PERIOD = 5000;
+        private const int TIMER_PERIOD = 10000;
 
         static void Main(string[] args)
         {

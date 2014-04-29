@@ -38,6 +38,7 @@ namespace PADI_DSTM
                             break;
                         }
                     }
+                    dataServers[meta.servers.ToArray()[0]].StorePadInt(meta.uid, p);
                 }
             }
         }

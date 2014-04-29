@@ -52,6 +52,10 @@ namespace PADI_DSTM
                 padInts.Add(uid, p);
                 Console.WriteLine("Re-Stored PadInt with uid {0}.", uid);
             }
+            else
+            {
+                padInts[uid] = p;
+            }
         }
 
         public bool Echo()

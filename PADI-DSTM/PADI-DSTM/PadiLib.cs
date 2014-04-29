@@ -102,7 +102,14 @@ namespace PADI_DSTM
                 IDataServer server = (IDataServer)Activator.GetObject(
                     typeof(IDataServer),
                     s);
-                return server.Read(this.uid, PadiDstm.currentTimestamp);
+                try
+                {
+                    return server.Read(this.uid, PadiDstm.currentTimestamp);
+                }
+                catch (System.Net.Sockets.SocketException e)
+                {
+                    continue;
+                }
             }
             throw new Exception("Error: Could not retrieve value from the data servers.");
         }
