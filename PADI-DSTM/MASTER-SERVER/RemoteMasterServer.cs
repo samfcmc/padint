@@ -13,6 +13,7 @@ namespace PADI_DSTM
 
         private Dictionary<long, PadiTransaction> transactions = new Dictionary<long, PadiTransaction>();
         private long currentTimestamp = 1;
+        private object timestampLock = new object();
 
         private void RestorePadInts(string faultyServer)
         {
@@ -71,10 +72,15 @@ namespace PADI_DSTM
 
         public long TxBegin()
         {
-            PadiTransaction tx = new PadiTransaction(currentTimestamp);
+            long timestamp;
+            lock (timestampLock)
+            {
+                timestamp = currentTimestamp++;
+            }
+            PadiTransaction tx = new PadiTransaction(timestamp);
             tx.state = STATE.RUNNING;
-            transactions.Add(currentTimestamp, tx);
-            return currentTimestamp++;
+            transactions.Add(timestamp, tx);
+            return timestamp;
         }
 
         public bool TxJoin(string url, long timestamp)
