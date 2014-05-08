@@ -10,10 +10,41 @@ namespace PADI_DSTM
         private Dictionary<string, IDataServer> dataServers = new Dictionary<string, IDataServer>();
         private Dictionary<string, string> nextServers = new Dictionary<string, string>();
         private Dictionary<int, PadIntMetadata> metadata = new Dictionary<int, PadIntMetadata>();
+        private List<PadIntMetadata> nonReplicatedPadInts = new List<PadIntMetadata>();
 
         private Dictionary<long, PadiTransaction> transactions = new Dictionary<long, PadiTransaction>();
         private long currentTimestamp = 1;
         private object timestampLock = new object();
+
+        private void ReplicatePadInts(IDataServer server, String serverURL)
+        {
+            List<PadIntMetadata> toRemove = new List<PadIntMetadata>();
+            foreach (PadIntMetadata meta in nonReplicatedPadInts)
+            {
+                IDataServer dataServer = (IDataServer)Activator.GetObject(
+                        typeof(IDataServer),
+                        meta.servers.ToArray()[0]); //there's only one element in the list after removing the faulty server
+                PadInt p = dataServer.AccessPadInt(meta.uid);
+                server.StorePadInt(meta.uid, p);
+                metadata[meta.uid].servers.Add(serverURL);
+                toRemove.Add(meta);   
+            }
+
+            foreach(PadIntMetadata meta in toRemove) {
+                nonReplicatedPadInts.Remove(meta);
+            }
+        }
+
+        private void CheckForNonReplicatedPadInts()
+        {
+            foreach (PadIntMetadata meta in metadata.Values)
+            {
+                if (meta.servers.Count < 2)
+                {
+                    nonReplicatedPadInts.Add(meta);
+                }
+            }
+        }
 
         private void RestorePadInts(string faultyServer)
         {
@@ -29,25 +60,32 @@ namespace PADI_DSTM
                     PadInt p = dataServer.AccessPadInt(meta.uid);
                     p.servers.Remove(faultyServer);
 
-                    foreach (string server in dataServers.Keys)
+                    if (dataServers.Count < 2)
                     {
-                        if (!meta.servers.ToArray()[0].Equals(server))
-                        {
-                            p.servers.Add(server);
-                            dataServers[server].StorePadInt(meta.uid, p);
-                            meta.servers.Add(server);
-                            break;
-                        }
+                        continue;
                     }
-                    dataServers[meta.servers.ToArray()[0]].StorePadInt(meta.uid, p);
+                    else
+                    {
+                        foreach (string server in dataServers.Keys)
+                        {
+                            if (!meta.servers.ToArray()[0].Equals(server))
+                            {
+                                p.servers.Add(server);
+                                dataServers[server].StorePadInt(meta.uid, p);
+                                meta.servers.Add(server);
+                                break;
+                            }
+                        }
+                        dataServers[meta.servers.ToArray()[0]].StorePadInt(meta.uid, p);
+                    }
                 }
             }
         }
 
         public string NotifyFault(string notifier, string faultyServer)
         {
-            //TODO: insert object replication from faulty server here
             RestorePadInts(faultyServer);
+            CheckForNonReplicatedPadInts();
 
             string faultyNext = nextServers[faultyServer];
             nextServers.Remove(faultyServer);
@@ -182,6 +220,12 @@ namespace PADI_DSTM
                 pmeta.uid = uid;
                 pmeta.servers = servers;
                 metadata.Add(uid, pmeta);
+
+                if (servers.Count < 2)
+                {
+                    nonReplicatedPadInts.Add(pmeta);
+                }
+
                 return pmeta;
             }
             return null;
@@ -248,7 +292,9 @@ namespace PADI_DSTM
                 theOneServer.SetNextServer(url);
             }
             nextServers.Add(url, remoteServer.GetNextServer());
-            
+
+            ReplicatePadInts(remoteServer,url);
+
             Console.WriteLine("Server with url " + url + " is now connected.");
             return true;
         }

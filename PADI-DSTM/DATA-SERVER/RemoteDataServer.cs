@@ -49,6 +49,7 @@ namespace PADI_DSTM
         {
             if (!padInts.Keys.Contains(uid))
             {
+                p.servers.Add(myUrl);
                 padInts.Add(uid, p);
                 Console.WriteLine("Re-Stored PadInt with uid {0}.", uid);
             }
