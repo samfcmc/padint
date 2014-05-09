@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Net.Sockets;
 
 namespace PADI_DSTM
 {
@@ -66,6 +67,7 @@ namespace PADI_DSTM
                     PadInt p = dataServer.AccessPadInt(meta.uid);
                     p.servers.Remove(faultyServer);
 
+                    dataServers[meta.servers.ToArray()[0]].RemoteObject.StorePadInt(meta.uid, p);
                     if (dataServers.Count < 2)
                     {
                         continue;
@@ -76,14 +78,13 @@ namespace PADI_DSTM
                         {
                             if (!meta.servers.ToArray()[0].Equals(server))
                             {
-                                p.servers.Add(server);
+                                //p.servers.Add(server);
                                 dataServers[server].RemoteObject.StorePadInt(meta.uid, p);
                                 dataServers[server].PadintCount++;
                                 meta.servers.Add(server);
                                 break;
                             }
                         }
-                        dataServers[meta.servers.ToArray()[0]].RemoteObject.StorePadInt(meta.uid, p);
                     }
                 }
             }
@@ -185,7 +186,13 @@ namespace PADI_DSTM
                 IDataServer server = (IDataServer)Activator.GetObject(
                     typeof(IDataServer),
                     s);
-                server.TxAbort(timestamp);
+                try
+                {
+                    server.TxAbort(timestamp);
+                }
+                catch(SocketException e) {
+                    continue;
+                }
             }
             transactions[timestamp].state = STATE.ABORTED;
             //transactions.Remove(timestamp);
