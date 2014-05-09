@@ -19,7 +19,7 @@ namespace PADI_DSTM
     public interface IMasterServer : IServer
     {
         string NotifyFault(string notifier, string faultyServer);
-        Dictionary<string, IDataServer> getDataServers();
+        Dictionary<string, ServerMetadata> getDataServers();
         PadiTransaction getTransaction(long timestamp);
         long TxBegin();
         bool TxJoin(string url, long timestamp);
@@ -210,9 +210,9 @@ namespace PADI_DSTM
                 Console.WriteLine("MasterServer is alive.");
             }
 
-            foreach (KeyValuePair<string, IDataServer> server in masterServer.getDataServers())
+            foreach (KeyValuePair<string, ServerMetadata> server in masterServer.getDataServers())
             {
-                if (server.Value.Status())
+                if (server.Value.RemoteObject.Status())
                 {
                     Console.WriteLine("DataServer " + server.Key);
                 }

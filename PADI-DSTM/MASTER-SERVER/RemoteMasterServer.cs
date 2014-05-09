@@ -7,15 +7,20 @@ namespace PADI_DSTM
 {
     public class RemoteMasterServer : MarshalByRefObject, IMasterServer
     {
-        private Dictionary<string, IDataServer> dataServers = new Dictionary<string, IDataServer>();
+        private Dictionary<string, ServerMetadata> dataServers = new Dictionary<string, ServerMetadata>();
         private Dictionary<string, string> nextServers = new Dictionary<string, string>();
         private Dictionary<int, PadIntMetadata> metadata = new Dictionary<int, PadIntMetadata>();
         private List<PadIntMetadata> nonReplicatedPadInts = new List<PadIntMetadata>();
 
         private Dictionary<long, PadiTransaction> transactions = new Dictionary<long, PadiTransaction>();
         private long currentTimestamp = 1;
-        private object timestampLock = new object();
+        private readonly object timestampLock = new object();
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="server">server to replicate to</param>
+        /// <param name="serverURL">Server's url to replicate to</param>
         private void ReplicatePadInts(IDataServer server, String serverURL)
         {
             List<PadIntMetadata> toRemove = new List<PadIntMetadata>();
@@ -26,6 +31,7 @@ namespace PADI_DSTM
                         meta.servers.ToArray()[0]); //there's only one element in the list after removing the faulty server
                 PadInt p = dataServer.AccessPadInt(meta.uid);
                 server.StorePadInt(meta.uid, p);
+                dataServers[serverURL].PadintCount++;
                 metadata[meta.uid].servers.Add(serverURL);
                 toRemove.Add(meta);   
             }
@@ -71,12 +77,13 @@ namespace PADI_DSTM
                             if (!meta.servers.ToArray()[0].Equals(server))
                             {
                                 p.servers.Add(server);
-                                dataServers[server].StorePadInt(meta.uid, p);
+                                dataServers[server].RemoteObject.StorePadInt(meta.uid, p);
+                                dataServers[server].PadintCount++;
                                 meta.servers.Add(server);
                                 break;
                             }
                         }
-                        dataServers[meta.servers.ToArray()[0]].StorePadInt(meta.uid, p);
+                        dataServers[meta.servers.ToArray()[0]].RemoteObject.StorePadInt(meta.uid, p);
                     }
                 }
             }
@@ -103,7 +110,7 @@ namespace PADI_DSTM
             return nextServers[dataServer];
         }
 
-        public Dictionary<string, IDataServer> getDataServers()
+        public Dictionary<string, ServerMetadata> getDataServers()
         {
             return dataServers;
         }
@@ -220,7 +227,9 @@ namespace PADI_DSTM
                 pmeta.uid = uid;
                 pmeta.servers = servers;
                 metadata.Add(uid, pmeta);
-
+                foreach(string url in servers) {
+                    dataServers[url].PadintCount++;
+                }
                 if (servers.Count < 2)
                 {
                     nonReplicatedPadInts.Add(pmeta);
@@ -230,25 +239,27 @@ namespace PADI_DSTM
             }
             return null;
         }
-
+        
         private List<string> getServersToStore()
         {
             int count = dataServers.Count;
             List<string> urls = new List<string>();
+            ICollection<ServerMetadata> servers = dataServers.Values;
+            var orderedServers = from s in servers
+                      orderby s.PadintCount
+                      select s;
+            ServerMetadata[] smetasArray = orderedServers.ToArray<ServerMetadata>();
 
-            int firstServer = new Random().Next(0, count);
-            string firstServerUrl = dataServers.Keys.ElementAt<string>(firstServer);
+            string firstServerUrl = smetasArray[0].Url;
             urls.Add(firstServerUrl);
             Console.WriteLine("First Server to store padInt: " + firstServerUrl);
 
             if (count > 1)
             {
-                int secondServer = (firstServer + 1) % count;
-                string secondServerUrl = dataServers.Keys.ElementAt<string>(secondServer);
+                string secondServerUrl = smetasArray[1].Url;
                 urls.Add(secondServerUrl);
                 Console.WriteLine("Second Server to store padInt: " + secondServerUrl);
             }
-
             return urls;
         }
 
@@ -275,7 +286,8 @@ namespace PADI_DSTM
             IDataServer remoteServer = (IDataServer)Activator.GetObject(
                 typeof(IDataServer),
                 url);
-            dataServers.Add(url, remoteServer);
+            ServerMetadata smeta = new ServerMetadata(remoteServer, url);
+            dataServers.Add(url, smeta);
 
             if (nextServers.Count == 0)
             {
