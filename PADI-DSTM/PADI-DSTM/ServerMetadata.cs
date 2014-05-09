@@ -5,6 +5,7 @@ using System.Text;
 
 namespace PADI_DSTM
 {
+    [Serializable]
     public class ServerMetadata
     {
         private string url;
@@ -25,6 +26,11 @@ namespace PADI_DSTM
             get { return padintCount; }
             set { padintCount = value; }
         }
+
+        public ServerMetadata()
+        {
+        }
+
         public ServerMetadata(IDataServer remoteObject, string url)
         {
             this.url = url;

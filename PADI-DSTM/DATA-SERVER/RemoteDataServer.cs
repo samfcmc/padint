@@ -45,6 +45,11 @@ namespace PADI_DSTM
         bool frozen = false;
         object monitor = new object();
 
+        public string GetURL()
+        {
+            return myUrl;
+        }
+
         public void StorePadInt(int uid, PadInt p)
         {
             if (!padInts.Keys.Contains(uid))

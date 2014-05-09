@@ -110,9 +110,9 @@ namespace PADI_DSTM
             return nextServers[dataServer];
         }
 
-        public Dictionary<string, ServerMetadata> getDataServers()
+        public List<string> getDataServers()
         {
-            return dataServers;
+            return dataServers.Keys.ToList<string>();
         }
 
         public long TxBegin()

@@ -19,7 +19,7 @@ namespace PADI_DSTM
     public interface IMasterServer : IServer
     {
         string NotifyFault(string notifier, string faultyServer);
-        Dictionary<string, ServerMetadata> getDataServers();
+        List<string> getDataServers();
         PadiTransaction getTransaction(long timestamp);
         long TxBegin();
         bool TxJoin(string url, long timestamp);
@@ -30,6 +30,7 @@ namespace PADI_DSTM
 
     public interface IDataServer : IServer
     {
+        string GetURL();
         void StorePadInt(int uid, PadInt p);
         bool Echo();
         string GetNextServer();
@@ -209,12 +210,17 @@ namespace PADI_DSTM
             {
                 Console.WriteLine("MasterServer is alive.");
             }
+            List<string> serversURL = masterServer.getDataServers();
 
-            foreach (KeyValuePair<string, ServerMetadata> server in masterServer.getDataServers())
+            foreach (string server in serversURL)
             {
-                if (server.Value.RemoteObject.Status())
+                IDataServer remoteServer = (IDataServer)Activator.GetObject(
+                    typeof(IDataServer),
+                    server);
+
+                if (remoteServer.Status())
                 {
-                    Console.WriteLine("DataServer " + server.Key);
+                    Console.WriteLine("DataServer " + server);
                 }
             }
             return true;
