@@ -113,7 +113,7 @@ namespace PADI_DSTM
 
         private int TryRead(IDataServer server)
         {
-            int tries = 10;
+            int tries = 3;
             while (tries > 0)
             {
                 try
@@ -147,7 +147,7 @@ namespace PADI_DSTM
 
         private void TryWrite(IDataServer server, int val)
         {
-            int tries = 10;
+            int tries = 3;
             while(tries > 0) {
                 try
                 {
