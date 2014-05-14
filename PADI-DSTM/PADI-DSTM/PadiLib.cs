@@ -96,72 +96,68 @@ namespace PADI_DSTM
         {
             if (PadiDstm.currentTimestamp < 0)
             {
-                throw new Exception("Error: Cannot read outside a transaction.");
+                throw new Exceptions.ReadWriteOutsideTransactionException(PadiDstm.currentTimestamp, "Error: Cannot read outside a transaction.");
             }
 
-            int val = 0;
-            foreach (string s in servers)
+            foreach (String s in servers)
             {
-                IDataServer server = (IDataServer)Activator.GetObject(
-                    typeof(IDataServer),
-                    s);
-                val = TryRead(server);
-                break;
+                int tries = 3;
+                while (tries > 0)
+                {
+                    try
+                    {
+                        IDataServer server = (IDataServer)Activator.GetObject(
+                        typeof(IDataServer),
+                        s);
+                        return server.Read(this.uid, PadiDstm.currentTimestamp);
+                    }
+                    catch (Exception e)
+                    {
+                        tries--;
+                    }
+                }
             }
-            return val;
-        }
+            //Refresh server data
+            PadInt refreshed = PadiDstm.AccessPadInt(uid);
+            servers = refreshed.servers;
 
-        private int TryRead(IDataServer server)
-        {
-            int tries = 3;
-            while (tries > 0)
-            {
-                try
-                {
-                    return server.Read(this.uid, PadiDstm.currentTimestamp);
-                }
-                catch (SocketException e)
-                {
-                    PadInt refreshed = PadiDstm.AccessPadInt(uid);
-                    servers = refreshed.servers;
-                    tries--;
-                }
-            }
-            throw new Exception("Timeout Error: Could not reach the servers where the PadInt was stored.");
+            //Throw error in case no server responded
+            throw new Exceptions.CannotReachServerException("Error: (TIMEOUT) Could not contact servers to read the PadInt");
         }
 
         public void Write(int val)
         {
             if (PadiDstm.currentTimestamp < 0)
             {
-                throw new Exception("Error: Cannot write outside a transaction.");
+                throw new Exceptions.ReadWriteOutsideTransactionException(PadiDstm.currentTimestamp, "Error: Cannot write outside a transaction.");
             }
-            foreach (string s in servers)
+
+            foreach (String s in servers)
             {
-                IDataServer server = (IDataServer)Activator.GetObject(
-                    typeof(IDataServer),
-                    s);
-                TryWrite(server, val);
+                int tries = 3;
+                while (tries > 0)
+                {
+                    try
+                    {
+                        IDataServer server = (IDataServer)Activator.GetObject(
+                        typeof(IDataServer),
+                        s);
+                        server.Write(this.uid, PadiDstm.currentTimestamp, val);
+                    }
+                    catch (Exception e)
+                    {
+                        tries--;
+                    }
+                }
             }
+            //Refresh server data
+            PadInt refreshed = PadiDstm.AccessPadInt(uid);
+            servers = refreshed.servers;
+
+            //Throw error in case no server responded
+            throw new Exceptions.CannotReachServerException("Error: (TIMEOUT) Could not contact servers to write in the PadInt");
         }
 
-        private void TryWrite(IDataServer server, int val)
-        {
-            int tries = 3;
-            while(tries > 0) {
-                try
-                {
-                    server.Write(this.uid, PadiDstm.currentTimestamp, val);
-                    return;
-                }
-                catch (SocketException e)
-                {
-                    PadInt refreshed = PadiDstm.AccessPadInt(uid);
-                    servers = refreshed.servers;
-                    tries--;
-                }
-            }
-        }
     }
 
     public class PadiDstm
@@ -217,10 +213,16 @@ namespace PADI_DSTM
                 IDataServer remoteServer = (IDataServer)Activator.GetObject(
                     typeof(IDataServer),
                     server);
-
-                if (remoteServer.Status())
+                try
                 {
-                    Console.WriteLine("DataServer " + server);
+                    if (remoteServer.Status())
+                    {
+                        Console.WriteLine("DataServer " + server);
+                    }
+                }
+                catch (SocketException e)
+                {
+                    continue;
                 }
             }
             return true;

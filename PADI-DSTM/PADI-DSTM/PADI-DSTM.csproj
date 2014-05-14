@@ -47,6 +47,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Exceptions\CannotReachServerException.cs" />
+    <Compile Include="Exceptions\ReadWriteOutsideTransactionException.cs" />
     <Compile Include="Exceptions\TransactionAbortedException.cs" />
     <Compile Include="PadiLib.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
