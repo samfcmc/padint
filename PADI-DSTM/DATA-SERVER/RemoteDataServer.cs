@@ -11,6 +11,16 @@ using System.Threading;
 
 namespace PADI_DSTM
 {
+    class Locker
+    {
+        private int id;
+
+        public Locker(int id) 
+        {
+            this.id = id;
+        }
+    }
+
     public class RemoteDataServer : MarshalByRefObject, IDataServer
     {
         Dictionary<int, PadInt> padInts = new Dictionary<int, PadInt>();
@@ -26,7 +36,6 @@ namespace PADI_DSTM
         List<int> usedPadInts = new List<int>();
         public static string myUrl;
         public static IMasterServer master;
-        private object locker = new object();
 
         /// <summary>
         /// The next server on the ring of servers to ping, to detect faults.
@@ -83,11 +92,8 @@ namespace PADI_DSTM
             if (!joinedTx.Contains(timestamp))
             {
                 master.TxJoin(myUrl, timestamp);
-                lock (locker)
-                {
-                    localTransactions.Add(timestamp, master.getTransaction(timestamp));
-                    joinedTx.Add(timestamp);
-                }
+                localTransactions.Add(timestamp, master.getTransaction(timestamp));
+                joinedTx.Add(timestamp);
             }
             if (timestamp < padint.readTimestamp || timestamp < padint.writeTimestamp)
             {
@@ -97,10 +103,8 @@ namespace PADI_DSTM
             }
             else
             {
-                lock(locker) {
-                    log.AddNewLogEntry(timestamp, uid, newvalue);
-                    usedPadInts.Add(uid);
-                }
+                log.AddNewLogEntry(timestamp, uid, newvalue);
+                usedPadInts.Add(uid);
                 padint.writeTimestamp = timestamp;
                 padint.value = newvalue;
             }
@@ -114,11 +118,8 @@ namespace PADI_DSTM
             if (!joinedTx.Contains(timestamp))
             {
                 master.TxJoin(myUrl, timestamp);
-                lock (locker)
-                {
-                    localTransactions.Add(timestamp, master.getTransaction(timestamp));
-                    joinedTx.Add(timestamp);
-                }
+                localTransactions.Add(timestamp, master.getTransaction(timestamp));
+                joinedTx.Add(timestamp);
             }
             if (padint.writeTimestamp > timestamp)
             {
@@ -130,10 +131,7 @@ namespace PADI_DSTM
             {
                 if (padint.writeTimestamp > 0 && padint.writeTimestamp != timestamp)
                 {
-                    lock (locker)
-                    {
-                        localTransactions[timestamp].dependencies.Add(padint.writeTimestamp);
-                    }
+                    localTransactions[timestamp].dependencies.Add(padint.writeTimestamp);
                 }
                 padint.readTimestamp = Math.Max(timestamp, padint.readTimestamp);
                 return padint.value;
@@ -158,16 +156,13 @@ namespace PADI_DSTM
         {
             checkFreeze();
 
-            lock (locker)
+            log.RemoveAllEntries(timestamp);
+            foreach (int uid in usedPadInts)
             {
-                log.RemoveAllEntries(timestamp);
-                foreach (int uid in usedPadInts)
-                {
-                    padInts[uid].value = log.getLastValue(uid);
-                    padInts[uid].writeTimestamp = log.getLastWriteTimestamp(uid);
-                }
-                joinedTx.Remove(timestamp);
+                padInts[uid].value = log.getLastValue(uid);
+                padInts[uid].writeTimestamp = log.getLastWriteTimestamp(uid);
             }
+            joinedTx.Remove(timestamp);
             return true;
         }
 
